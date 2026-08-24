@@ -4,45 +4,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, ChevronRight, X } from "lucide-react";
 
-const readings = [
-  {
-    id: 1,
-    title: "私の家族",
-    titleMeaning: "Keluarga Saya",
-    level: "N5",
-    text: "わたしの　かぞくは　よにんです。ちちと　ははと　あにと　わたしです。ちちは　かいしゃいんです。ははは　せんせいです。あには　だいがくせいです。わたしは　こうこうせいです。",
-    translation: "Keluarga saya terdiri dari empat orang. Ayah, ibu, kakak, dan saya. Ayah adalah karyawan perusahaan. Ibu adalah guru. Kakak adalah mahasiswa. Saya adalah siswa SMA.",
-    vocab: [
-      { word: "かぞく", meaning: "keluarga" },
-      { word: "よにん", meaning: "empat orang" },
-      { word: "ちち", meaning: "ayah (saya)" },
-      { word: "はは", meaning: "ibu (saya)" },
-      { word: "あに", meaning: "kakak laki-laki (saya)" },
-    ],
-    questions: [
-      { q: "Berapa orang dalam keluarga?", options: ["3 orang", "4 orang", "5 orang", "6 orang"], correct: 1 },
-      { q: "Apa pekerjaan ibu?", options: ["Karyawan", "Guru", "Dokter", "Mahasiswa"], correct: 1 },
-    ],
-  },
-  {
-    id: 2,
-    title: "わたしのまち",
-    titleMeaning: "Kotaku",
-    level: "N5",
-    text: "わたしの　まちは　ちいさいです。でも、とても　しずかです。まちに　こうえんが　あります。こうえんは　おおきくて、きれいです。まいにち　こうえんで　さんぽします。",
-    translation: "Kota saya kecil. Tapi sangat tenang. Di kota ada taman. Taman itu besar dan indah. Setiap hari berjalan-jalan di taman.",
-    vocab: [
-      { word: "まち", meaning: "kota" },
-      { word: "ちいさい", meaning: "kecil" },
-      { word: "しずか", meaning: "tenang" },
-      { word: "こうえん", meaning: "taman" },
-      { word: "さんぽ", meaning: "berjalan-jalan" },
-    ],
-    questions: [
-      { q: "Bagaimana kota yang diceritakan?", options: ["Besar dan ramai", "Kecil dan tenang", "Besar dan tenang", "Kecil dan ramai"], correct: 1 },
-    ],
-  },
-];
+import { readingData, type ReadingPassage } from "@/lib/readingData";
+
+const readings = readingData;
 
 export default function ReadingPage() {
   const [activeReading, setActiveReading] = useState(0);
