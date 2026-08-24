@@ -211,7 +211,19 @@ export default function VocabularyPage() {
                   <p className="font-jp text-[#1F2937] font-bold">{selectedVocab.ex}</p>
                 </div>
 
-                <button className="w-full py-2.5 bg-[#22C55E] text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => {
+                    if ("speechSynthesis" in window) {
+                      window.speechSynthesis.cancel();
+                      const utterance = new SpeechSynthesisUtterance(selectedVocab.jp);
+                      utterance.lang = "ja-JP";
+                      window.speechSynthesis.speak(utterance);
+                    } else {
+                      alert("Browser Anda tidak mendukung fitur suara (Speech Synthesis).");
+                    }
+                  }}
+                  className="w-full py-2.5 bg-[#22C55E] text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+                >
                   <Volume2 size={16} /> Dengarkan Pengucapan
                 </button>
               </div>

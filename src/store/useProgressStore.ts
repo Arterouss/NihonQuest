@@ -13,12 +13,14 @@ export interface UserProgress {
   weeklyXp: Record<string, number>; // Mapping "YYYY-MM-DD" to XP gained
   skillStats: Record<string, { correct: number; total: number }>; // Tracks correct/total items per category
   jlptN5Progress: { kanji: number; vocab: number; grammar: number }; // Track items completed per category for N5
+  completedPaths: number[]; // Array of path node IDs that are completed
 }
 
 interface ProgressState extends UserProgress {
   addXP: (amount: number, category?: string, isN5?: boolean) => void;
   incrementSessions: () => void;
   completeDailyTask: (taskId: number) => void;
+  completePath: (pathId: number) => void;
   checkAndResetDaily: () => void;
 }
 
@@ -42,6 +44,7 @@ const initialState: UserProgress = {
     Reading: { correct: 0, total: 0 },
   },
   jlptN5Progress: { kanji: 0, vocab: 0, grammar: 0 },
+  completedPaths: [],
 };
 
 export const useProgressStore = create<ProgressState>()(
@@ -122,6 +125,17 @@ export const useProgressStore = create<ProgressState>()(
           if (!state.dailyTasksDone.includes(taskId)) {
             return {
               dailyTasksDone: [...state.dailyTasksDone, taskId],
+            };
+          }
+          return state;
+        });
+      },
+
+      completePath: (pathId) => {
+        set((state) => {
+          if (!state.completedPaths.includes(pathId)) {
+            return {
+              completedPaths: [...state.completedPaths, pathId],
             };
           }
           return state;

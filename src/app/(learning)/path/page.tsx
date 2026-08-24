@@ -2,22 +2,72 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Map, ChevronRight, Lock, CheckCircle2, BookOpen } from "lucide-react";
+import { Map, ChevronRight, Lock, CheckCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useProgressStore } from "@/store/useProgressStore";
 
-const pathNodes = [
-  { id: 1, label: "Hiragana Dasar", icon: "あ", href: "/hiragana", status: "completed", color: "#22C55E", bg: "#DCFCE7" },
-  { id: 2, label: "Katakana Dasar", icon: "ア", href: "/katakana", status: "completed", color: "#22C55E", bg: "#DCFCE7" },
-  { id: 3, label: "Kosakata N5", icon: "語", href: "/vocabulary", status: "active", color: "#D95F76", bg: "#FCE7EC" },
-  { id: 4, label: "Tata Bahasa N5", icon: "文", href: "/grammar", status: "active", color: "#D95F76", bg: "#FCE7EC" },
-  { id: 5, label: "Kanji N5", icon: "漢", href: "/kanji", status: "locked", color: "#6B7280", bg: "#F3F4F6" },
-  { id: 6, label: "Ujian N5", icon: "🎯", href: "/jlpt/n5", status: "locked", color: "#6B7280", bg: "#F3F4F6" },
-  { id: 7, label: "Kosakata N4", icon: "語", href: "/vocabulary?jlpt=N4", status: "locked", color: "#6B7280", bg: "#F3F4F6" },
-  { id: 8, label: "Tata Bahasa N4", icon: "文", href: "/grammar?jlpt=N4", status: "locked", color: "#6B7280", bg: "#F3F4F6" },
-  { id: 9, label: "Kanji N4", icon: "漢", href: "/kanji?jlpt=N4", status: "locked", color: "#6B7280", bg: "#F3F4F6" },
-  { id: 10, label: "Ujian N4", icon: "🎯", href: "/jlpt/n4", status: "locked", color: "#6B7280", bg: "#F3F4F6" },
+const baseNodes = [
+  { id: 1, label: "Hiragana Dasar", icon: "あ", href: "/hiragana", color: "#22C55E", bg: "#DCFCE7", reqLevel: 1 },
+  { id: 2, label: "Katakana Dasar", icon: "ア", href: "/katakana", color: "#22C55E", bg: "#DCFCE7", reqLevel: 1 },
+  { id: 3, label: "Kosakata N5", icon: "語", href: "/vocabulary", color: "#D95F76", bg: "#FCE7EC", reqLevel: 1 },
+  { id: 4, label: "Tata Bahasa N5", icon: "文", href: "/grammar", color: "#D95F76", bg: "#FCE7EC", reqLevel: 1 },
+  { id: 5, label: "Kanji N5", icon: "漢", href: "/kanji", color: "#D95F76", bg: "#FCE7EC", reqLevel: 1 },
+  { id: 6, label: "Latihan JLPT N5", icon: "🎯", href: "/jlpt/n5", color: "#D95F76", bg: "#FCE7EC", reqLevel: 2 },
+  { id: 7, label: "Kosakata N4", icon: "語", href: "/vocabulary?jlpt=N4", color: "#3B82F6", bg: "#DBEAFE", reqLevel: 3 },
+  { id: 8, label: "Tata Bahasa N4", icon: "文", href: "/grammar?jlpt=N4", color: "#3B82F6", bg: "#DBEAFE", reqLevel: 3 },
+  { id: 9, label: "Kanji N4", icon: "漢", href: "/kanji?jlpt=N4", color: "#3B82F6", bg: "#DBEAFE", reqLevel: 3 },
+  { id: 10, label: "Latihan JLPT N4", icon: "🎯", href: "/jlpt/n4", color: "#3B82F6", bg: "#DBEAFE", reqLevel: 4 },
+  { id: 11, label: "Kosakata N3", icon: "語", href: "/vocabulary?jlpt=N3", color: "#F59E0B", bg: "#FEF9C3", reqLevel: 5 },
+  { id: 12, label: "Tata Bahasa N3", icon: "文", href: "/grammar?jlpt=N3", color: "#F59E0B", bg: "#FEF9C3", reqLevel: 5 },
+  { id: 13, label: "Kanji N3", icon: "漢", href: "/kanji?jlpt=N3", color: "#F59E0B", bg: "#FEF9C3", reqLevel: 5 },
+  { id: 14, label: "Latihan JLPT N3", icon: "🎯", href: "/jlpt/n3", color: "#F59E0B", bg: "#FEF9C3", reqLevel: 6 },
+  { id: 15, label: "Kosakata N2", icon: "語", href: "/vocabulary?jlpt=N2", color: "#8B5CF6", bg: "#EDE9FE", reqLevel: 7 },
+  { id: 16, label: "Tata Bahasa N2", icon: "文", href: "/grammar?jlpt=N2", color: "#8B5CF6", bg: "#EDE9FE", reqLevel: 7 },
+  { id: 17, label: "Kanji N2", icon: "漢", href: "/kanji?jlpt=N2", color: "#8B5CF6", bg: "#EDE9FE", reqLevel: 7 },
+  { id: 18, label: "Latihan JLPT N2", icon: "🎯", href: "/jlpt/n2", color: "#8B5CF6", bg: "#EDE9FE", reqLevel: 8 },
+  { id: 19, label: "Kosakata N1", icon: "語", href: "/vocabulary?jlpt=N1", color: "#EC4899", bg: "#FCE7F3", reqLevel: 9 },
+  { id: 20, label: "Tata Bahasa N1", icon: "文", href: "/grammar?jlpt=N1", color: "#EC4899", bg: "#FCE7F3", reqLevel: 9 },
+  { id: 21, label: "Kanji N1", icon: "漢", href: "/kanji?jlpt=N1", color: "#EC4899", bg: "#FCE7F3", reqLevel: 9 },
+  { id: 22, label: "Latihan JLPT N1", icon: "🎯", href: "/jlpt/n1", color: "#EC4899", bg: "#FCE7F3", reqLevel: 10 },
 ];
 
 export default function PathPage() {
+  const store = useProgressStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  // Determine status dynamically
+  const pathNodes = baseNodes.map(node => {
+    let status = "locked";
+    
+    // Unlock based on user level
+    if (store.level >= node.reqLevel) {
+      status = "active";
+    }
+
+    // Determine if completed based on stats
+    if (status === "active") {
+      if (node.id === 1 && store.skillStats["Hiragana"]?.total > 0) status = "completed";
+      if (node.id === 2 && store.skillStats["Katakana"]?.total > 0) status = "completed";
+      if (node.id === 3 && store.jlptN5Progress.vocab >= 10) status = "completed";
+      if (node.id === 4 && store.jlptN5Progress.grammar >= 5) status = "completed";
+      if (node.id === 5 && store.jlptN5Progress.kanji >= 5) status = "completed";
+    }
+
+    // If locked, change its colors to gray
+    const color = status === "locked" ? "#6B7280" : node.color;
+    const bg = status === "locked" ? "#F3F4F6" : node.bg;
+
+    return { ...node, status, color, bg };
+  });
+
+  const completedCount = pathNodes.filter(n => n.status === "completed").length;
+  const progressPercentage = (completedCount / pathNodes.length) * 100;
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
@@ -34,10 +84,15 @@ export default function PathPage() {
         <div className="bg-white rounded-2xl border border-[#E7E5E4] p-5">
           <div className="flex justify-between items-center mb-2">
             <span className="font-semibold text-[#1F2937]">Progress Keseluruhan</span>
-            <span className="font-bold text-[#D95F76]">2 / 10</span>
+            <span className="font-bold text-[#D95F76]">{completedCount} / {pathNodes.length}</span>
           </div>
           <div className="w-full bg-[#FCE7EC] rounded-full h-2.5">
-            <div className="h-2.5 rounded-full sakura-gradient" style={{ width: "20%" }} />
+            <motion.div 
+              className="h-2.5 rounded-full sakura-gradient" 
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercentage}%` }}
+              transition={{ duration: 1 }}
+            />
           </div>
         </div>
       </motion.div>
@@ -105,7 +160,7 @@ export default function PathPage() {
                       {node.label}
                     </h3>
                     <p className="text-xs" style={{ color: node.color }}>
-                      {isCompleted ? "✓ Selesai" : isActive ? "Sedang dipelajari" : "🔒 Terkunci"}
+                      {isCompleted ? "✓ Selesai" : isLocked ? `🔒 Terbuka di Level ${node.reqLevel}` : "Sedang dipelajari"}
                     </p>
                   </div>
 

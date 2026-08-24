@@ -99,7 +99,19 @@ function CharModal({ char, romaji, onClose }: { char: string; romaji: string; on
 
         <div className="flex items-center gap-3 mb-6">
           <span className="px-4 py-2 bg-[#FCE7EC] text-[#D95F76] rounded-xl font-bold">{romaji}</span>
-          <button className="p-2 rounded-xl bg-[#EEF2FF] text-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all">
+          <button 
+            onClick={() => {
+              if ("speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(char);
+                utterance.lang = "ja-JP";
+                window.speechSynthesis.speak(utterance);
+              } else {
+                alert("Browser Anda tidak mendukung fitur suara.");
+              }
+            }}
+            className="p-2 rounded-xl bg-[#EEF2FF] text-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all"
+          >
             <Volume2 size={18} />
           </button>
         </div>
