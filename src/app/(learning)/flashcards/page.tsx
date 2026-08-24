@@ -1,46 +1,109 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RotateCcw, ChevronRight, ChevronLeft, Check, X, Zap } from "lucide-react";
-
-const flashcardDecks = [
-  { front: "食べる", back: "たべる", meaning: "makan", type: "vocab", romaji: "taberu" },
-  { front: "飲む", back: "のむ", meaning: "minum", type: "vocab", romaji: "nomu" },
-  { front: "行く", back: "いく", meaning: "pergi", type: "vocab", romaji: "iku" },
-  { front: "大きい", back: "おおきい", meaning: "besar", type: "vocab", romaji: "ookii" },
-  { front: "日", back: "にち / ひ", meaning: "hari / matahari", type: "kanji", romaji: "nichi / hi" },
-  { front: "山", back: "さん / やま", meaning: "gunung", type: "kanji", romaji: "san / yama" },
-  { front: "水", back: "すい / みず", meaning: "air", type: "kanji", romaji: "sui / mizu" },
-  { front: "〜です", back: "Bentuk sopan", meaning: "adalah", type: "grammar", romaji: "desu" },
-  { front: "〜ます", back: "Kata kerja sopan", meaning: "melakukan (sopan)", type: "grammar", romaji: "masu" },
-  { front: "友達", back: "ともだち", meaning: "teman", type: "vocab", romaji: "tomodachi" },
-];
+import { RotateCcw, Zap, Shuffle, BookOpen, Languages, PenTool } from "lucide-react";
+import { kanjiData } from "@/lib/kanjiData";
+import { vocabularyData } from "@/lib/vocabularyData";
+import { grammarData } from "@/lib/grammarData";
 
 type Rating = "again" | "hard" | "good" | "easy";
+type DeckType = "vocab" | "kanji" | "grammar";
+type Level = "all" | "N5" | "N4" | "N3" | "N2" | "N1";
+
+interface FlashCard {
+  front: string;
+  back: string;
+  meaning: string;
+  romaji: string;
+  type: DeckType;
+}
 
 const ratingConfig: Record<Rating, { label: string; color: string; bg: string; xp: number }> = {
   again: { label: "Lagi", color: "#EF4444", bg: "#FEE2E2", xp: 0 },
-  hard: { label: "Sulit", color: "#F97316", bg: "#FED7AA", xp: 1 },
-  good: { label: "Baik", color: "#3B82F6", bg: "#DBEAFE", xp: 2 },
-  easy: { label: "Mudah", color: "#22C55E", bg: "#DCFCE7", xp: 3 },
+  hard:  { label: "Sulit", color: "#F97316", bg: "#FED7AA", xp: 1 },
+  good:  { label: "Baik",  color: "#3B82F6", bg: "#DBEAFE", xp: 2 },
+  easy:  { label: "Mudah", color: "#22C55E", bg: "#DCFCE7", xp: 3 },
 };
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildDeck(type: DeckType, level: Level, count = 20): FlashCard[] {
+  if (type === "vocab") {
+    const filtered = level === "all" ? vocabularyData : vocabularyData.filter(v => v.level === level);
+    return shuffle(filtered).slice(0, count).map(v => ({
+      front: v.word,
+      back: v.reading,
+      meaning: v.meaning,
+      romaji: v.romaji,
+      type: "vocab",
+    }));
+  }
+  if (type === "kanji") {
+    const filtered = level === "all" ? kanjiData : kanjiData.filter(k => k.level === level);
+    return shuffle(filtered).slice(0, count).map(k => ({
+      front: k.character,
+      back: k.onyomi || k.kunyomi || "-",
+      meaning: k.meaning,
+      romaji: [k.onyomi, k.kunyomi].filter(Boolean).join(" / "),
+      type: "kanji",
+    }));
+  }
+  // grammar
+  const filtered = level === "all" ? grammarData : grammarData.filter(g => g.level === level);
+  return shuffle(filtered).slice(0, count).map(g => ({
+    front: g.pattern,
+    back: g.meaning,
+    meaning: g.explanation?.slice(0, 80) + "..." || "",
+    romaji: g.example?.jp || "",
+    type: "grammar",
+  }));
+}
+
+const DECK_TYPES: { key: DeckType; label: string; icon: React.ReactNode; color: string }[] = [
+  { key: "vocab",   label: "Kosakata", icon: <Languages size={16} />, color: "#D95F76" },
+  { key: "kanji",   label: "Kanji",    icon: <PenTool size={16} />,   color: "#8B5CF6" },
+  { key: "grammar", label: "Tata Bahasa", icon: <BookOpen size={16} />, color: "#F97316" },
+];
+
+const LEVELS: Level[] = ["all", "N5", "N4", "N3", "N2", "N1"];
+
 export default function FlashcardsPage() {
+  const [deckType, setDeckType] = useState<DeckType>("vocab");
+  const [level, setLevel] = useState<Level>("N5");
+  const [deck, setDeck] = useState<FlashCard[]>(() => buildDeck("vocab", "N5"));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [completed, setCompleted] = useState<Record<number, Rating>>({});
   const [sessionXP, setSessionXP] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [started, setStarted] = useState(false);
 
-  const current = flashcardDecks[currentIndex];
-  const totalCards = flashcardDecks.length;
+  const totalCards = deck.length;
+  const current = deck[currentIndex];
   const progress = (Object.keys(completed).length / totalCards) * 100;
 
-  const handleRating = (rating: Rating) => {
-    setCompleted((prev) => ({ ...prev, [currentIndex]: rating }));
-    setSessionXP((prev) => prev + ratingConfig[rating].xp);
+  const startSession = () => {
+    const newDeck = buildDeck(deckType, level);
+    setDeck(newDeck);
+    setCurrentIndex(0);
+    setFlipped(false);
+    setCompleted({});
+    setSessionXP(0);
+    setFinished(false);
+    setStarted(true);
+  };
 
+  const handleRating = (rating: Rating) => {
+    setCompleted(prev => ({ ...prev, [currentIndex]: rating }));
+    setSessionXP(prev => prev + ratingConfig[rating].xp);
     if (currentIndex < totalCards - 1) {
       setCurrentIndex(currentIndex + 1);
       setFlipped(false);
@@ -49,18 +112,77 @@ export default function FlashcardsPage() {
     }
   };
 
-  const handleRestart = () => {
-    setCurrentIndex(0);
-    setFlipped(false);
-    setCompleted({});
-    setSessionXP(0);
-    setFinished(false);
-  };
+  const deckColor = DECK_TYPES.find(d => d.key === deckType)?.color || "#D95F76";
 
+  // === Setup Screen ===
+  if (!started) {
+    return (
+      <div className="max-w-lg mx-auto space-y-6">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-2xl font-bold text-[#1F2937] mb-1">Flashcard</h1>
+          <p className="text-[#6B7280] text-sm">Pilih jenis kartu dan level untuk memulai sesi belajar.</p>
+        </motion.div>
+
+        {/* Deck Type */}
+        <div className="bg-white rounded-2xl border border-[#E7E5E4] p-5">
+          <p className="text-sm font-bold text-[#1F2937] mb-3">📚 Jenis Kartu</p>
+          <div className="grid grid-cols-3 gap-2">
+            {DECK_TYPES.map(d => (
+              <button
+                key={d.key}
+                onClick={() => setDeckType(d.key)}
+                className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all"
+                style={{
+                  borderColor: deckType === d.key ? d.color : "#E7E5E4",
+                  backgroundColor: deckType === d.key ? d.color + "15" : "white",
+                  color: deckType === d.key ? d.color : "#6B7280",
+                }}
+              >
+                {d.icon}
+                <span className="text-xs font-bold">{d.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Level */}
+        <div className="bg-white rounded-2xl border border-[#E7E5E4] p-5">
+          <p className="text-sm font-bold text-[#1F2937] mb-3">🎯 Level JLPT</p>
+          <div className="flex flex-wrap gap-2">
+            {LEVELS.map(lv => (
+              <button
+                key={lv}
+                onClick={() => setLevel(lv)}
+                className="px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all"
+                style={{
+                  borderColor: level === lv ? deckColor : "#E7E5E4",
+                  backgroundColor: level === lv ? deckColor : "white",
+                  color: level === lv ? "white" : "#6B7280",
+                }}
+              >
+                {lv === "all" ? "Semua" : lv}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={startSession}
+          className="w-full py-4 rounded-2xl text-white font-bold text-lg flex items-center justify-center gap-2 shadow-lg"
+          style={{ background: `linear-gradient(135deg, ${deckColor}, ${deckColor}cc)` }}
+        >
+          <Shuffle size={20} /> Mulai Sesi (20 Kartu Acak)
+        </motion.button>
+      </div>
+    );
+  }
+
+  // === Finished Screen ===
   if (finished) {
-    const goodCount = Object.values(completed).filter((r) => r === "good" || r === "easy").length;
+    const goodCount = Object.values(completed).filter(r => r === "good" || r === "easy").length;
     const accuracy = Math.round((goodCount / totalCards) * 100);
-
     return (
       <div className="max-w-md mx-auto">
         <motion.div
@@ -68,7 +190,7 @@ export default function FlashcardsPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white rounded-3xl border border-[#E7E5E4] p-8 text-center shadow-xl"
         >
-          <div className="text-6xl mb-4">🎉</div>
+          <div className="text-6xl mb-4">{accuracy >= 70 ? "🎉" : "💪"}</div>
           <h2 className="text-2xl font-bold text-[#1F2937] mb-2">Sesi Selesai!</h2>
           <p className="text-[#6B7280] mb-6">Kamu telah menyelesaikan semua flashcard sesi ini.</p>
 
@@ -77,7 +199,7 @@ export default function FlashcardsPage() {
               { label: "Kartu", value: totalCards, icon: "🃏" },
               { label: "XP Dapat", value: sessionXP, icon: "⚡" },
               { label: "Akurasi", value: `${accuracy}%`, icon: "🎯" },
-            ].map((s) => (
+            ].map(s => (
               <div key={s.label} className="bg-[#FFF9F7] rounded-2xl p-3">
                 <div className="text-2xl mb-1">{s.icon}</div>
                 <div className="font-bold text-[#1F2937] text-lg">{s.value}</div>
@@ -88,36 +210,35 @@ export default function FlashcardsPage() {
 
           <div className="space-y-2 mb-6">
             {(Object.entries(ratingConfig) as [Rating, typeof ratingConfig[Rating]][]).map(([rating, config]) => {
-              const count = Object.values(completed).filter((r) => r === rating).length;
+              const count = Object.values(completed).filter(r => r === rating).length;
               return (
                 <div key={rating} className="flex items-center justify-between">
-                  <span className="text-sm font-semibold" style={{ color: config.color }}>{config.label}</span>
+                  <span className="text-sm font-semibold w-14" style={{ color: config.color }}>{config.label}</span>
                   <div className="flex-1 mx-3 bg-[#F3F4F6] rounded-full h-2">
-                    <div
-                      className="h-2 rounded-full"
-                      style={{ width: `${(count / totalCards) * 100}%`, backgroundColor: config.color }}
-                    />
+                    <div className="h-2 rounded-full" style={{ width: `${(count / totalCards) * 100}%`, backgroundColor: config.color }} />
                   </div>
-                  <span className="text-sm font-bold text-[#1F2937]">{count}</span>
+                  <span className="text-sm font-bold text-[#1F2937] w-4">{count}</span>
                 </div>
               );
             })}
           </div>
 
-          <button
-            onClick={handleRestart}
-            className="w-full py-3 rounded-xl sakura-gradient text-white font-bold flex items-center justify-center gap-2"
-          >
-            <RotateCcw size={16} /> Mulai Lagi
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => { setStarted(false); }} className="flex-1 py-3 rounded-xl border-2 border-[#E7E5E4] text-[#6B7280] font-bold">
+              Ganti Deck
+            </button>
+            <button onClick={startSession} className="flex-1 py-3 rounded-xl text-white font-bold flex items-center justify-center gap-2" style={{ backgroundColor: deckColor }}>
+              <RotateCcw size={16} /> Ulangi
+            </button>
+          </div>
         </motion.div>
       </div>
     );
   }
 
+  // === Card Session ===
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      {/* Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -129,20 +250,13 @@ export default function FlashcardsPage() {
             <span className="text-sm font-bold text-[#4F46E5]">{sessionXP} XP</span>
           </div>
         </div>
-
-        {/* Progress */}
         <div className="w-full bg-[#FCE7EC] rounded-full h-2">
-          <motion.div
-            className="h-2 rounded-full sakura-gradient"
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.3 }}
-          />
+          <motion.div className="h-2 rounded-full" initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 0.3 }} style={{ backgroundColor: deckColor }} />
         </div>
       </motion.div>
 
       {/* Flashcard */}
-      <div className="flashcard-container" style={{ height: "280px" }}>
+      <div style={{ height: "280px", perspective: "1000px" }}>
         <motion.div
           className="w-full h-full relative cursor-pointer"
           onClick={() => setFlipped(!flipped)}
@@ -151,37 +265,33 @@ export default function FlashcardsPage() {
         >
           {/* Front */}
           <div
-            className="absolute inset-0 bg-white rounded-3xl border-2 border-[#E7E5E4] flex flex-col items-center justify-center p-8 shadow-lg"
-            style={{ backfaceVisibility: "hidden" }}
+            className="absolute inset-0 bg-white rounded-3xl border-2 flex flex-col items-center justify-center p-8 shadow-lg"
+            style={{ backfaceVisibility: "hidden", borderColor: deckColor + "40" }}
           >
-            <span className="text-xs font-bold text-[#D95F76] uppercase tracking-wider mb-4">
+            <span className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: deckColor }}>
               {current.type === "kanji" ? "KANJI" : current.type === "grammar" ? "TATA BAHASA" : "KOSAKATA"}
             </span>
-            <span className="text-6xl font-jp font-bold text-[#1F2937] mb-4">{current.front}</span>
+            <span className="text-5xl font-jp font-bold text-[#1F2937] mb-4 text-center leading-tight">{current.front}</span>
             <p className="text-[#6B7280] text-sm">Ketuk untuk mengungkap</p>
           </div>
 
           {/* Back */}
           <div
-            className="absolute inset-0 bg-gradient-to-br from-[#D95F76] to-[#B83D58] rounded-3xl flex flex-col items-center justify-center p-8 shadow-lg"
-            style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+            className="absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-8 shadow-lg"
+            style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", background: `linear-gradient(135deg, ${deckColor}, ${deckColor}bb)` }}
           >
-            <p className="text-white/70 text-sm mb-2">Baca:</p>
-            <span className="text-4xl font-jp font-bold text-white mb-2">{current.back}</span>
-            <span className="text-white/80 text-lg font-semibold mb-1">{current.meaning}</span>
-            <span className="text-white/60 text-sm italic">{current.romaji}</span>
+            <p className="text-white/70 text-sm mb-2">Bacaan:</p>
+            <span className="text-3xl font-jp font-bold text-white mb-2 text-center">{current.back}</span>
+            <span className="text-white/90 text-lg font-semibold mb-1 text-center">{current.meaning}</span>
+            {current.romaji && <span className="text-white/60 text-sm italic text-center">{current.romaji}</span>}
           </div>
         </motion.div>
       </div>
 
-      {/* Rating Buttons (shown when flipped) */}
+      {/* Rating Buttons */}
       <AnimatePresence>
         {flipped && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}>
             <p className="text-center text-sm font-semibold text-[#6B7280] mb-3">Seberapa mudah kartu ini?</p>
             <div className="grid grid-cols-4 gap-2">
               {(Object.entries(ratingConfig) as [Rating, typeof ratingConfig[Rating]][]).map(([rating, config]) => (
@@ -203,9 +313,7 @@ export default function FlashcardsPage() {
       </AnimatePresence>
 
       {!flipped && (
-        <p className="text-center text-sm text-[#6B7280]">
-          Klik kartu untuk mengungkap jawaban
-        </p>
+        <p className="text-center text-sm text-[#6B7280]">Klik kartu untuk mengungkap jawaban</p>
       )}
     </div>
   );
