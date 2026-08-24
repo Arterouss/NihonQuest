@@ -4,22 +4,23 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import {
-  BookOpen, Zap, Trophy, Star, ChevronRight, Menu, X,
-  Play, Brain, Flame, Target, Clock, CheckCircle2,
-  ArrowRight, Globe, Music, Headphones, BookMarked,
-  Layers, MessageCircle, Sparkles, GraduationCap,
-  BarChart2, Award, Calendar, TrendingUp,
+  BookOpen, Zap, Trophy, ChevronRight, Menu, X,
+  Play, Brain, Flame, Target, CheckCircle2,
+  ArrowRight, Layers, Sparkles, Headphones,
+  BarChart2, Calendar, TrendingUp,
 } from "lucide-react";
 
 // ── Sakura Petal Component ──────────────────────────────────────────
 function SakuraPetal({ delay = 0, x = 50 }: { delay?: number; x?: number }) {
+  // Use a pseudo-random deterministic delay based on x to satisfy React purity rules
+  const pseudoRandomDelay = (x % 5) + 1;
   return (
     <motion.div
       className="absolute text-2xl select-none pointer-events-none"
       style={{ left: `${x}%`, top: "-30px" }}
       initial={{ y: -30, opacity: 1, rotate: 0 }}
       animate={{ y: "110vh", opacity: [1, 1, 0], rotate: 360 }}
-      transition={{ duration: 8, delay, ease: "linear", repeat: Infinity, repeatDelay: Math.random() * 5 }}
+      transition={{ duration: 8, delay, ease: "linear", repeat: Infinity, repeatDelay: pseudoRandomDelay }}
     >
       🌸
     </motion.div>
@@ -78,13 +79,13 @@ function Navbar() {
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <Link
-              href="/login"
+              href="/dashboard"
               className="text-[#6B7280] hover:text-[#D95F76] font-medium text-sm transition-colors"
             >
-              Masuk
+              Dashboard (Offline)
             </Link>
             <Link
-              href="/register"
+              href="/dashboard"
               className="px-4 py-2 rounded-xl text-white text-sm font-semibold sakura-gradient hover:opacity-90 transition-opacity shadow-sm"
             >
               Mulai Belajar
@@ -123,11 +124,11 @@ function Navbar() {
                 </a>
               ))}
               <hr className="border-[#E7E5E4]" />
-              <Link href="/login" className="text-[#6B7280] font-medium py-2">
-                Masuk
+              <Link href="/dashboard" className="text-[#6B7280] font-medium py-2">
+                Dashboard (Offline)
               </Link>
               <Link
-                href="/register"
+                href="/dashboard"
                 className="px-4 py-3 rounded-xl text-white font-semibold sakura-gradient text-center"
               >
                 Mulai Belajar
@@ -554,7 +555,6 @@ function ExploreSection() {
           <p className="text-[#6B7280] max-w-xl mx-auto">
             Konten pembelajaran lengkap dari alfabet dasar hingga teks tingkat lanjut.
           </p>
-          <p className="text-sm text-[#D95F76] mt-2 font-medium">🔒 Login diperlukan untuk mengakses konten</p>
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -567,7 +567,7 @@ function ExploreSection() {
               transition={{ delay: i * 0.06 }}
             >
               <Link
-                href={`/login?redirect=${cat.href}`}
+                href={cat.href}
                 className="group flex flex-col p-5 rounded-2xl border border-[#E7E5E4] bg-white hover:shadow-lg hover:border-transparent transition-all relative overflow-hidden"
                 style={{ "--hover-shadow": `0 20px 40px ${cat.color}20` } as React.CSSProperties}
               >

@@ -2,10 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { Plus, Edit2, Trash2, Filter } from "lucide-react";
 
 export default async function AdminContentPage() {
-  const contents = await prisma.learningContent.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 20,
-  });
+  // MOCK DB FOR OFFLINE MODE
+  const contents: any[] = [];
 
   return (
     <div className="space-y-6">

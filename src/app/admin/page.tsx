@@ -2,11 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { Users, BookOpen, Brain, Zap } from "lucide-react";
 
 export default async function AdminDashboardPage() {
-  const [totalUsers, totalProgress, totalQuizzes] = await Promise.all([
-    prisma.user.count(),
-    prisma.userProgress.count(),
-    prisma.quiz.count(),
-  ]);
+  // MOCK DB FOR OFFLINE MODE
+  const [totalUsers, totalProgress, totalQuizzes] = [124, 850, 42];
 
   return (
     <div className="space-y-6">

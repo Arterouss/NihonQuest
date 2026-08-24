@@ -21,6 +21,9 @@ export default function KanjiPage() {
   const [search, setSearch] = useState("");
   const [selectedKanji, setSelectedKanji] = useState<KanjiEntry | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 50;
+
   const levelData = kanjiData.filter((k) => k.jlpt === activeLevel);
   const filtered = search
     ? levelData.filter(
@@ -31,6 +34,9 @@ export default function KanjiPage() {
           k.kunyomi.some((r) => r.includes(search))
       )
     : levelData;
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedKanji = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const c = jlptColors[activeLevel];
 
@@ -58,7 +64,7 @@ export default function KanjiPage() {
           return (
             <button
               key={level}
-              onClick={() => { setActiveLevel(level); setSearch(""); }}
+              onClick={() => { setActiveLevel(level); setSearch(""); setCurrentPage(1); }}
               className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border flex flex-col items-center gap-0.5 ${
                 activeLevel === level ? "text-white border-transparent" : "border-[#E7E5E4] text-[#6B7280]"
               }`}
@@ -80,7 +86,7 @@ export default function KanjiPage() {
           type="text"
           placeholder="Cari kanji, arti, onyomi, atau kunyomi..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
           className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#E7E5E4] bg-white focus:border-[#8B5CF6] focus:ring-2 focus:ring-[#8B5CF6]/20 transition-all text-sm"
         />
       </div>
@@ -113,7 +119,7 @@ export default function KanjiPage() {
 
       {/* Kanji Grid */}
       <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3">
-        {filtered.map((kanji) => (
+        {paginatedKanji.map((kanji) => (
           <motion.button
             key={kanji.char + kanji.jlpt}
             whileHover={{ y: -3, scale: 1.03 }}
@@ -126,6 +132,29 @@ export default function KanjiPage() {
           </motion.button>
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 mt-8">
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 rounded-xl border border-[#E7E5E4] bg-white text-[#1F2937] font-semibold disabled:opacity-50 hover:bg-gray-50 transition-all text-sm"
+          >
+            Sebelumnya
+          </button>
+          <span className="text-sm font-medium text-[#6B7280]">
+            Halaman {currentPage} dari {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 rounded-xl border border-[#E7E5E4] bg-white text-[#1F2937] font-semibold disabled:opacity-50 hover:bg-gray-50 transition-all text-sm"
+          >
+            Selanjutnya
+          </button>
+        </div>
+      )}
 
       {/* Kanji Detail Modal */}
       <AnimatePresence>
