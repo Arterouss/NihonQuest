@@ -554,6 +554,7 @@ function ExploreSection() {
           <p className="text-[#6B7280] max-w-xl mx-auto">
             Konten pembelajaran lengkap dari alfabet dasar hingga teks tingkat lanjut.
           </p>
+          <p className="text-sm text-[#D95F76] mt-2 font-medium">🔒 Login diperlukan untuk mengakses konten</p>
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -566,8 +567,8 @@ function ExploreSection() {
               transition={{ delay: i * 0.06 }}
             >
               <Link
-                href={cat.href}
-                className="group flex flex-col p-5 rounded-2xl border border-[#E7E5E4] bg-white hover:shadow-lg hover:border-transparent transition-all"
+                href={`/login?redirect=${cat.href}`}
+                className="group flex flex-col p-5 rounded-2xl border border-[#E7E5E4] bg-white hover:shadow-lg hover:border-transparent transition-all relative overflow-hidden"
                 style={{ "--hover-shadow": `0 20px 40px ${cat.color}20` } as React.CSSProperties}
               >
                 <div

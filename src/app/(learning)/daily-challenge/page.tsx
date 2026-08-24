@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Flame, Zap, Lock, ChevronRight, Trophy } from "lucide-react";
+import { CheckCircle2, Flame, Zap, ChevronRight, Trophy } from "lucide-react";
+import Link from "next/link";
 
 const tasks = [
-  { id: 1, label: "5 Kanji Baru", xp: 20, icon: "漢", color: "#8B5CF6", bg: "#EDE9FE", done: false },
-  { id: 2, label: "10 Kosakata", xp: 30, icon: "語", color: "#22C55E", bg: "#DCFCE7", done: false },
-  { id: 3, label: "5 Tata Bahasa", xp: 25, icon: "文", color: "#F59E0B", bg: "#FEF9C3", done: false },
-  { id: 4, label: "5 Soal Kuis", xp: 25, icon: "❓", color: "#3B82F6", bg: "#DBEAFE", done: false },
+  { id: 1, label: "5 Kanji Baru", xp: 20, icon: "漢", color: "#8B5CF6", bg: "#EDE9FE", href: "/kanji", done: false },
+  { id: 2, label: "10 Kosakata", xp: 30, icon: "語", color: "#22C55E", bg: "#DCFCE7", href: "/vocabulary", done: false },
+  { id: 3, label: "5 Tata Bahasa", xp: 25, icon: "文", color: "#F59E0B", bg: "#FEF9C3", href: "/grammar", done: false },
+  { id: 4, label: "5 Soal Kuis", xp: 25, icon: "❓", color: "#3B82F6", bg: "#DBEAFE", href: "/quiz", done: false },
 ];
 
 export default function DailyChallengePage() {
@@ -19,7 +20,7 @@ export default function DailyChallengePage() {
   const earnedXP = tasksDone.reduce((sum, id) => sum + (tasks.find((t) => t.id === id)?.xp || 0), 0);
   const progress = (tasksDone.length / tasks.length) * 100;
 
-  const handleTask = (id: number) => {
+  const handleComplete = (id: number) => {
     if (tasksDone.includes(id)) return;
     const newDone = [...tasksDone, id];
     setTasksDone(newDone);
@@ -55,7 +56,10 @@ export default function DailyChallengePage() {
               <div className="text-xs text-[#6B7280]">N5 Achievement</div>
             </div>
           </div>
-          <p className="text-sm text-[#6B7280]">Kembali besok untuk tantangan baru! 🌸</p>
+          <Link href="/dashboard" className="block w-full py-3 rounded-xl bg-[#D95F76] text-white font-semibold text-center hover:bg-[#B83D58] transition-colors">
+            Kembali ke Dashboard
+          </Link>
+          <p className="text-sm text-[#6B7280] mt-4">Kembali besok untuk tantangan baru! 🌸</p>
         </motion.div>
       </div>
     );
@@ -118,9 +122,7 @@ export default function DailyChallengePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className={`bg-white rounded-2xl border-2 p-5 transition-all ${
-                done ? "border-[#22C55E] bg-[#DCFCE7]" : "border-[#E7E5E4]"
-              }`}
+              className={`bg-white rounded-2xl border-2 p-5 transition-all ${done ? "border-[#22C55E] bg-[#DCFCE7]" : "border-[#E7E5E4]"}`}
             >
               <div className="flex items-center gap-4">
                 <div
@@ -138,15 +140,23 @@ export default function DailyChallengePage() {
                   </span>
                 </div>
                 {!done ? (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleTask(task.id)}
-                    className="px-4 py-2 rounded-xl text-white text-sm font-bold flex items-center gap-1"
-                    style={{ backgroundColor: task.color }}
-                  >
-                    Mulai <ChevronRight size={14} />
-                  </motion.button>
+                  <div className="flex flex-col gap-1.5">
+                    {/* Link to the relevant page */}
+                    <Link
+                      href={task.href}
+                      className="px-4 py-2 rounded-xl text-white text-sm font-bold flex items-center gap-1 hover:opacity-90 transition-opacity"
+                      style={{ backgroundColor: task.color }}
+                    >
+                      Mulai <ChevronRight size={14} />
+                    </Link>
+                    {/* After visiting, mark as done */}
+                    <button
+                      onClick={() => handleComplete(task.id)}
+                      className="px-4 py-1.5 rounded-xl text-xs font-medium border-2 border-[#22C55E] text-[#22C55E] hover:bg-[#DCFCE7] transition-colors"
+                    >
+                      ✓ Selesai
+                    </button>
+                  </div>
                 ) : (
                   <CheckCircle2 size={24} className="text-[#22C55E]" />
                 )}
