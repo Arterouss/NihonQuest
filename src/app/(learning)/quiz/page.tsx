@@ -35,9 +35,11 @@ function buildQuizQuestions(type: QuizType, level: Level, count = 15): Question[
   const questions: Question[] = [];
 
   if (type === "vocab" || type === "mixed") {
-    const filtered = level === "all" ? vocabularyData : vocabularyData.filter(v => v.level === level);
+    // vocab level is number: 5, 4, 3, 2, 1
+    const levelNum = level === "all" ? null : parseInt(level.replace("N", ""));
+    const filtered = levelNum === null ? vocabularyData : vocabularyData.filter(v => v.level === levelNum);
     const pool = shuffle(filtered).slice(0, type === "mixed" ? Math.ceil(count / 3) : count);
-    const allMeanings = vocabularyData.map(v => v.meaning);
+    const allMeanings = [...new Set(vocabularyData.map(v => v.meaning))].filter(Boolean);
 
     for (const v of pool) {
       const wrongOpts = getWrongOptions(allMeanings, v.meaning);
@@ -46,32 +48,34 @@ function buildQuizQuestions(type: QuizType, level: Level, count = 15): Question[
         question: `Apa arti dari ${v.word} (${v.reading})?`,
         options: opts,
         correct: opts.indexOf(v.meaning),
-        explanation: `${v.word} (${v.reading}) = "${v.meaning}". Romaji: ${v.romaji}.`,
+        explanation: `${v.word} (${v.reading}) = "${v.meaning}".`,
       });
     }
   }
 
   if (type === "kanji" || type === "mixed") {
-    const filtered = level === "all" ? kanjiData : kanjiData.filter(k => k.level === level);
+    // kanji uses field 'jlpt' and 'char'
+    const filtered = level === "all" ? kanjiData : kanjiData.filter(k => k.jlpt === level);
     const pool = shuffle(filtered).slice(0, type === "mixed" ? Math.ceil(count / 3) : count);
-    const allMeanings = kanjiData.map(k => k.meaning);
+    const allMeanings = [...new Set(kanjiData.map(k => k.meaning))].filter(Boolean);
 
     for (const k of pool) {
       const wrongOpts = getWrongOptions(allMeanings, k.meaning);
       const opts = shuffle([k.meaning, ...wrongOpts]);
       questions.push({
-        question: `Apa arti kanji ${k.character}?`,
+        question: `Apa arti kanji ${k.char}?`,
         options: opts,
         correct: opts.indexOf(k.meaning),
-        explanation: `${k.character} berarti "${k.meaning}". Onyomi: ${k.onyomi || "-"}, Kunyomi: ${k.kunyomi || "-"}.`,
+        explanation: `${k.char} = "${k.meaning}". Onyomi: ${k.onyomi?.[0] || "-"}, Kunyomi: ${k.kunyomi?.[0] || "-"}.`,
       });
     }
   }
 
   if (type === "grammar" || type === "mixed") {
-    const filtered = level === "all" ? grammarData : grammarData.filter(g => g.level === level);
+    // grammar uses field 'jlpt' and 'examples'
+    const filtered = level === "all" ? grammarData : grammarData.filter(g => g.jlpt === level);
     const pool = shuffle(filtered).slice(0, type === "mixed" ? Math.ceil(count / 3) : count);
-    const allMeanings = grammarData.map(g => g.meaning);
+    const allMeanings = [...new Set(grammarData.map(g => g.meaning))].filter(Boolean);
 
     for (const g of pool) {
       const wrongOpts = getWrongOptions(allMeanings, g.meaning);
@@ -80,7 +84,7 @@ function buildQuizQuestions(type: QuizType, level: Level, count = 15): Question[
         question: `Pola tata bahasa 「${g.pattern}」 berarti apa?`,
         options: opts,
         correct: opts.indexOf(g.meaning),
-        explanation: `${g.pattern} = "${g.meaning}". Contoh: ${g.example?.jp || "-"}`,
+        explanation: `${g.pattern} = "${g.meaning}". Contoh: ${g.examples?.[0]?.jp || "-"}`,
       });
     }
   }
@@ -113,6 +117,10 @@ export default function QuizPage() {
 
   const startQuiz = () => {
     const qs = buildQuizQuestions(quizType, level);
+    if (qs.length === 0) {
+      alert("Tidak ada soal untuk pilihan ini. Coba kategori atau level lain!");
+      return;
+    }
     setQuestions(qs);
     setCurrentQ(0);
     setSelected(null);
@@ -260,6 +268,12 @@ export default function QuizPage() {
 
   // === Quiz Screen ===
   const q = questions[currentQ];
+  // Guard: if question is undefined, reset
+  if (!q) {
+    setFinished(true);
+    return null;
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>

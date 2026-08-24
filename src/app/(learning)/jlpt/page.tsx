@@ -30,7 +30,7 @@ const jlptLevels = [
     grammar: "150",
     desc: "Dapat memahami bahasa Jepang tingkat dasar.",
     sections: ["Kosakata", "Kanji", "Tata Bahasa", "Membaca", "Mendengarkan"],
-    locked: true,
+    locked: false,
   },
   {
     level: "N3",
@@ -43,7 +43,7 @@ const jlptLevels = [
     grammar: "200",
     desc: "Di antara N4 dan N2, dapat memahami bahasa Jepang sehari-hari.",
     sections: ["Kosakata", "Kanji", "Tata Bahasa", "Membaca", "Mendengarkan"],
-    locked: true,
+    locked: false,
   },
   {
     level: "N2",
@@ -56,7 +56,7 @@ const jlptLevels = [
     grammar: "300",
     desc: "Dapat memahami bahasa Jepang dalam berbagai situasi.",
     sections: ["Kosakata", "Kanji", "Tata Bahasa", "Membaca", "Mendengarkan"],
-    locked: true,
+    locked: false,
   },
   {
     level: "N1",
@@ -69,7 +69,7 @@ const jlptLevels = [
     grammar: "500",
     desc: "Dapat memahami bahasa Jepang dalam segala situasi termasuk teks kompleks.",
     sections: ["Kosakata", "Kanji", "Tata Bahasa", "Membaca", "Mendengarkan"],
-    locked: true,
+    locked: false,
   },
 ];
 

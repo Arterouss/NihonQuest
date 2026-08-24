@@ -37,33 +37,36 @@ function shuffle<T>(arr: T[]): T[] {
 
 function buildDeck(type: DeckType, level: Level, count = 20): FlashCard[] {
   if (type === "vocab") {
-    const filtered = level === "all" ? vocabularyData : vocabularyData.filter(v => v.level === level);
+    // vocab level is a number: 5, 4, 3, 2, 1
+    const levelNum = level === "all" ? null : parseInt(level.replace("N", ""));
+    const filtered = levelNum === null ? vocabularyData : vocabularyData.filter(v => v.level === levelNum);
     return shuffle(filtered).slice(0, count).map(v => ({
       front: v.word,
       back: v.reading,
       meaning: v.meaning,
-      romaji: v.romaji,
-      type: "vocab",
+      romaji: "",
+      type: "vocab" as DeckType,
     }));
   }
   if (type === "kanji") {
-    const filtered = level === "all" ? kanjiData : kanjiData.filter(k => k.level === level);
+    // kanji uses field 'jlpt' and 'char'
+    const filtered = level === "all" ? kanjiData : kanjiData.filter(k => k.jlpt === level);
     return shuffle(filtered).slice(0, count).map(k => ({
-      front: k.character,
-      back: k.onyomi || k.kunyomi || "-",
+      front: k.char,
+      back: [k.onyomi?.[0], k.kunyomi?.[0]].filter(Boolean).join(" / ") || "-",
       meaning: k.meaning,
-      romaji: [k.onyomi, k.kunyomi].filter(Boolean).join(" / "),
-      type: "kanji",
+      romaji: "",
+      type: "kanji" as DeckType,
     }));
   }
-  // grammar
-  const filtered = level === "all" ? grammarData : grammarData.filter(g => g.level === level);
+  // grammar: uses field 'jlpt' and 'examples'
+  const filtered = level === "all" ? grammarData : grammarData.filter(g => g.jlpt === level);
   return shuffle(filtered).slice(0, count).map(g => ({
     front: g.pattern,
     back: g.meaning,
     meaning: g.explanation?.slice(0, 80) + "..." || "",
-    romaji: g.example?.jp || "",
-    type: "grammar",
+    romaji: g.examples?.[0]?.jp || "",
+    type: "grammar" as DeckType,
   }));
 }
 
@@ -92,6 +95,10 @@ export default function FlashcardsPage() {
 
   const startSession = () => {
     const newDeck = buildDeck(deckType, level);
+    if (newDeck.length === 0) {
+      alert("Tidak ada kartu untuk level dan jenis ini. Coba pilihan lain!");
+      return;
+    }
     setDeck(newDeck);
     setCurrentIndex(0);
     setFlipped(false);
@@ -237,6 +244,12 @@ export default function FlashcardsPage() {
   }
 
   // === Card Session ===
+  // Guard: if current card is undefined, reset
+  if (!current) {
+    setFinished(true);
+    return null;
+  }
+
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
