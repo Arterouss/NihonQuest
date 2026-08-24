@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, ChevronRight, X } from "lucide-react";
-
 import { readingData, type ReadingPassage } from "@/lib/readingData";
+import { useProgressStore } from "@/store/useProgressStore";
 
 const readings = readingData;
 
@@ -104,7 +104,16 @@ export default function ReadingPage() {
                   return (
                     <button
                       key={oi}
-                      onClick={() => !answered && setAnswers({ ...answers, [`${qi}`]: oi })}
+                      onClick={() => {
+                        if (!answered) {
+                          setAnswers({ ...answers, [`${qi}`]: oi });
+                          if (isCorrect) {
+                            const store = useProgressStore.getState();
+                            store.addXP(20);
+                            store.incrementSessions();
+                          }
+                        }
+                      }}
                       disabled={answered}
                       className={`p-3 rounded-xl text-sm font-medium border-2 transition-all text-left ${
                         !answered ? "border-[#E7E5E4] hover:border-[#EC4899]" :

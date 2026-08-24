@@ -8,16 +8,11 @@ import {
   ChevronRight, Brain, Layers,
 } from "lucide-react";
 
-interface DashboardClientProps {
-  userData: {
-    name: string;
-    xp: number;
-    level: number;
-    streak: number;
-    completedItems: number;
-    studySessions: number;
-  };
-}
+import { useEffect, useState } from "react";
+import { useProgressStore } from "@/store/useProgressStore";
+
+// Remove DashboardClientProps since we fetch from global store
+
 
 const quickActions = [
   { href: "/hiragana", label: "Hiragana", icon: "あ", color: "#D95F76", bg: "#FCE7EC" },
@@ -43,7 +38,19 @@ const recommendedLessons = [
   { href: "/grammar", title: "Pola Kalimat Dasar", level: "N5", type: "Tata Bahasa", icon: "文", color: "#F59E0B" },
 ];
 
-export default function DashboardClient({ userData }: DashboardClientProps) {
+export default function DashboardClient() {
+  const store = useProgressStore();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch for localStorage
+  useEffect(() => {
+    store.checkAndResetDaily();
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null; // Or a loading spinner
+
+  const userData = store;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "おはようございます" : hour < 17 ? "こんにちは" : "こんばんは";
   const greetingId = hour < 12 ? "Selamat Pagi" : hour < 17 ? "Selamat Siang" : "Selamat Malam";

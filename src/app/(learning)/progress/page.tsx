@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { BarChart2, TrendingUp, BookOpen, Target, Clock, Zap, CheckCircle2, Flame } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar, PieChart, Pie, Cell } from "recharts";
+import { useEffect, useState } from "react";
+import { useProgressStore } from "@/store/useProgressStore";
 
 const weeklyData = [
   { day: "Sen", xp: 120, items: 8 },
@@ -30,8 +32,17 @@ const jlptProgress = [
 ];
 
 export default function ProgressPage() {
-  const totalXP = 1240;
-  const weekXP = weeklyData.reduce((sum, d) => sum + d.xp, 0);
+  const store = useProgressStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  const totalXP = store.xp;
+  const weekXP = weeklyData.reduce((sum, d) => sum + d.xp, 0); // TODO: dynamic weekXP later
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -53,8 +64,8 @@ export default function ProgressPage() {
         {[
           { label: "Total XP", value: totalXP.toLocaleString(), icon: <Zap size={18} />, color: "#4F46E5", bg: "#EEF2FF" },
           { label: "XP Minggu Ini", value: weekXP, icon: <TrendingUp size={18} />, color: "#22C55E", bg: "#DCFCE7" },
-          { label: "Hari Streak", value: 7, icon: <Flame size={18} />, color: "#D95F76", bg: "#FCE7EC" },
-          { label: "Item Selesai", value: 96, icon: <CheckCircle2 size={18} />, color: "#F59E0B", bg: "#FEF9C3" },
+          { label: "Hari Streak", value: store.streak, icon: <Flame size={18} />, color: "#D95F76", bg: "#FCE7EC" },
+          { label: "Item Selesai", value: store.completedItems, icon: <CheckCircle2 size={18} />, color: "#F59E0B", bg: "#FEF9C3" },
         ].map((s, i) => (
           <motion.div
             key={s.label}

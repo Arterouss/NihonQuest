@@ -6,6 +6,7 @@ import { CheckCircle2, XCircle, ChevronRight, RotateCcw, Shuffle, BookOpen, Lang
 import { kanjiData } from "@/lib/kanjiData";
 import { vocabularyData } from "@/lib/vocabularyData";
 import { grammarData } from "@/lib/grammarData";
+import { useProgressStore } from "@/store/useProgressStore";
 
 type QuizType = "vocab" | "kanji" | "grammar" | "mixed";
 type Level = "all" | "N5" | "N4" | "N3" | "N2" | "N1";
@@ -147,6 +148,10 @@ export default function QuizPage() {
       setAnswered(false);
     } else {
       setFinished(true);
+      // Trigger global XP update (10 XP per correct answer)
+      const store = useProgressStore.getState();
+      store.addXP(score * 10);
+      store.incrementSessions();
     }
   };
 

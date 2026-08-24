@@ -3,32 +3,36 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Volume2, BookOpen } from "lucide-react";
-
-const dictEntries = [
-  { word: "食べる", reading: "たべる", romaji: "taberu", meaning: "makan", pos: "Kata Kerja (Gr. 2)", example: "毎日ご飯を食べます。", exMeaning: "Saya makan nasi setiap hari." },
-  { word: "日本語", reading: "にほんご", romaji: "nihongo", meaning: "bahasa Jepang", pos: "Kata Benda", example: "日本語を勉強しています。", exMeaning: "Saya sedang belajar bahasa Jepang." },
-  { word: "学校", reading: "がっこう", romaji: "gakkou", meaning: "sekolah", pos: "Kata Benda", example: "学校に行きます。", exMeaning: "Saya pergi ke sekolah." },
-  { word: "大きい", reading: "おおきい", romaji: "ookii", meaning: "besar", pos: "Kata Sifat-い", example: "大きい犬がいます。", exMeaning: "Ada anjing besar." },
-  { word: "好き", reading: "すき", romaji: "suki", meaning: "suka / favorit", pos: "Kata Sifat-な", example: "音楽が好きです。", exMeaning: "Saya suka musik." },
-  { word: "友達", reading: "ともだち", romaji: "tomodachi", meaning: "teman", pos: "Kata Benda", example: "友達と遊びます。", exMeaning: "Bermain bersama teman." },
-];
+import { vocabularyData } from "@/lib/vocabularyData";
 
 export default function DictionaryPage() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<typeof dictEntries>([]);
+  const [results, setResults] = useState<typeof vocabularyData>([]);
   const [searched, setSearched] = useState(false);
 
   const handleSearch = () => {
     if (!query.trim()) return;
-    const filtered = dictEntries.filter(
+    const q = query.toLowerCase().trim();
+    
+    // Batasi hasil pencarian agar tidak terlalu berat (maksimal 50)
+    const filtered = vocabularyData.filter(
       (e) =>
-        e.word.includes(query) ||
-        e.reading.includes(query) ||
-        e.meaning.toLowerCase().includes(query.toLowerCase()) ||
-        e.romaji.toLowerCase().includes(query.toLowerCase())
-    );
+        e.word.includes(q) ||
+        e.reading.includes(q) ||
+        e.meaning.toLowerCase().includes(q)
+    ).slice(0, 50);
+    
     setResults(filtered);
     setSearched(true);
+  };
+
+  const playAudio = (text: string) => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ja-JP";
+      window.speechSynthesis.speak(utterance);
+    }
   };
 
   return (
@@ -41,7 +45,7 @@ export default function DictionaryPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[#1F2937]">Kamus</h1>
-            <p className="text-[#6B7280] text-sm">辞書 — Cari kata dalam kamus Jepang-Indonesia</p>
+            <p className="text-[#6B7280] text-sm">辞書 — Cari dari 8.000+ kosakata Jepang-Indonesia</p>
           </div>
         </div>
       </motion.div>
@@ -56,7 +60,7 @@ export default function DictionaryPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="Cari dalam bahasa Jepang, romaji, atau Indonesia..."
+              placeholder="Cari kanji, hiragana, atau arti bahasa Indonesianya..."
               className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-[#E7E5E4] bg-[#FFF9F7] focus:border-[#D95F76] focus:ring-2 focus:ring-[#D95F76]/20 text-[#1F2937] text-sm transition-all"
             />
           </div>
@@ -69,7 +73,7 @@ export default function DictionaryPage() {
         </div>
 
         <div className="flex gap-2 mt-3 flex-wrap">
-          {["食べる", "日本語", "学校", "好き"].map((w) => (
+          {["食べる", "大きい", "sekolah", "teman", "air"].map((w) => (
             <button
               key={w}
               onClick={() => { setQuery(w); }}
@@ -86,13 +90,13 @@ export default function DictionaryPage() {
         <div>
           <p className="text-sm text-[#6B7280] mb-4">
             {results.length > 0
-              ? `${results.length} hasil untuk "${query}"`
+              ? `${results.length > 49 ? 'Menampilkan 50' : results.length} hasil untuk "${query}"`
               : `Tidak ada hasil untuk "${query}"`}
           </p>
           <div className="space-y-4">
-            {results.map((entry) => (
+            {results.map((entry, idx) => (
               <motion.div
-                key={entry.word}
+                key={`${entry.word}-${idx}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-2xl border border-[#E7E5E4] p-6 hover:shadow-md transition-all"
@@ -101,26 +105,28 @@ export default function DictionaryPage() {
                   <div>
                     <span className="text-4xl font-jp font-bold text-[#1F2937]">{entry.word}</span>
                     <span className="ml-3 text-lg font-jp text-[#D95F76]">{entry.reading}</span>
-                    <p className="text-[#6B7280] text-sm mt-0.5">{entry.romaji}</p>
                   </div>
-                  <button className="p-2 rounded-xl bg-[#EEF2FF] text-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all">
+                  <button 
+                    onClick={() => playAudio(entry.word)}
+                    className="p-2 rounded-xl bg-[#EEF2FF] text-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all"
+                    title="Dengarkan Pengucapan"
+                  >
                     <Volume2 size={18} />
                   </button>
                 </div>
 
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="px-3 py-1 bg-[#FFF9F7] border border-[#E7E5E4] rounded-full text-xs font-medium text-[#6B7280]">
-                    {entry.pos}
+                  <span className="px-3 py-1 bg-[#FCE7F3] text-[#D95F76] rounded-full text-xs font-bold">
+                    JLPT N{entry.level}
                   </span>
+                  {entry.type && (
+                    <span className="px-3 py-1 bg-[#FFF9F7] border border-[#E7E5E4] rounded-full text-xs font-medium text-[#6B7280]">
+                      {entry.type}
+                    </span>
+                  )}
                 </div>
 
-                <p className="text-[#1F2937] font-semibold mb-3">{entry.meaning}</p>
-
-                <div className="bg-[#FFF9F7] rounded-xl p-3">
-                  <p className="text-xs font-bold text-[#6B7280] mb-1">CONTOH KALIMAT</p>
-                  <p className="font-jp text-[#1F2937] font-medium">{entry.example}</p>
-                  <p className="text-sm text-[#6B7280] mt-0.5">{entry.exMeaning}</p>
-                </div>
+                <p className="text-[#1F2937] font-semibold text-lg">{entry.meaning}</p>
               </motion.div>
             ))}
           </div>
@@ -131,7 +137,7 @@ export default function DictionaryPage() {
         <div className="text-center py-12 text-[#6B7280]">
           <div className="text-6xl mb-4 font-jp">辞書</div>
           <p className="font-medium">Masukkan kata untuk mencari di kamus</p>
-          <p className="text-sm mt-1">Dukung pencarian dalam Jepang, romaji, atau Indonesia</p>
+          <p className="text-sm mt-1">Dukung pencarian dalam Jepang (Kanji/Kana) atau Indonesia</p>
         </div>
       )}
     </div>

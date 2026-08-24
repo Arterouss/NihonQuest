@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Flame, Zap, ChevronRight, Trophy } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useProgressStore } from "@/store/useProgressStore";
 
 const tasks = [
   { id: 1, label: "5 Kanji Baru", xp: 20, icon: "漢", color: "#8B5CF6", bg: "#EDE9FE", href: "/kanji", done: false },
@@ -13,8 +15,18 @@ const tasks = [
 ];
 
 export default function DailyChallengePage() {
-  const [tasksDone, setTasksDone] = useState<number[]>([]);
+  const store = useProgressStore();
+  const [mounted, setMounted] = useState(false);
   const [finished, setFinished] = useState(false);
+
+  useEffect(() => {
+    store.checkAndResetDaily();
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  const tasksDone = store.dailyTasksDone;
 
   const totalXP = tasks.reduce((sum, t) => sum + t.xp, 0);
   const earnedXP = tasksDone.reduce((sum, id) => sum + (tasks.find((t) => t.id === id)?.xp || 0), 0);
@@ -22,9 +34,17 @@ export default function DailyChallengePage() {
 
   const handleComplete = (id: number) => {
     if (tasksDone.includes(id)) return;
-    const newDone = [...tasksDone, id];
-    setTasksDone(newDone);
-    if (newDone.length === tasks.length) {
+    
+    // Add XP to global store
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+      store.addXP(task.xp);
+      store.incrementSessions();
+    }
+    
+    store.completeDailyTask(id);
+    
+    if (tasksDone.length + 1 === tasks.length) {
       setTimeout(() => setFinished(true), 500);
     }
   };
@@ -108,7 +128,7 @@ export default function DailyChallengePage() {
           {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </span>
         <span className="ml-2 px-3 py-1 bg-[#DCFCE7] text-[#22C55E] text-xs font-bold rounded-full">
-          🔥 Streak 7 Hari
+          🔥 Streak {store.streak} Hari
         </span>
       </div>
 

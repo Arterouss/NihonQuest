@@ -6,6 +6,7 @@ import { RotateCcw, Zap, Shuffle, BookOpen, Languages, PenTool } from "lucide-re
 import { kanjiData } from "@/lib/kanjiData";
 import { vocabularyData } from "@/lib/vocabularyData";
 import { grammarData } from "@/lib/grammarData";
+import { useProgressStore } from "@/store/useProgressStore";
 
 type Rating = "again" | "hard" | "good" | "easy";
 type DeckType = "vocab" | "kanji" | "grammar";
@@ -109,13 +110,19 @@ export default function FlashcardsPage() {
   };
 
   const handleRating = (rating: Rating) => {
+    const xpGained = ratingConfig[rating].xp;
     setCompleted(prev => ({ ...prev, [currentIndex]: rating }));
-    setSessionXP(prev => prev + ratingConfig[rating].xp);
+    setSessionXP(prev => prev + xpGained);
+    
     if (currentIndex < totalCards - 1) {
       setCurrentIndex(currentIndex + 1);
       setFlipped(false);
     } else {
       setFinished(true);
+      // Trigger global XP update
+      const store = useProgressStore.getState();
+      store.addXP(sessionXP + xpGained);
+      store.incrementSessions();
     }
   };
 

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Play, Pause, CheckCircle2, Headphones, Volume2 } from "lucide-react";
 
 import { listeningData, type ListeningExercise } from "@/lib/listeningData";
+import { useProgressStore } from "@/store/useProgressStore";
 
 const listeningExercises = listeningData;
 
@@ -149,21 +150,33 @@ export default function ListeningPage() {
           <div key={qi}>
             <p className="font-semibold text-[#1F2937] mb-3">{q.q}</p>
             <div className="grid grid-cols-2 gap-2">
-              {q.options.map((opt, oi) => (
-                <button
-                  key={oi}
-                  onClick={() => setAnswered(oi)}
-                  disabled={answered !== null}
-                  className={`p-3 rounded-xl text-sm font-medium border-2 transition-all ${
-                    answered === null ? "border-[#E7E5E4] hover:border-[#3B82F6]" :
-                    oi === q.correct ? "border-[#22C55E] bg-[#DCFCE7] text-[#22C55E]" :
-                    oi === answered && oi !== q.correct ? "border-[#EF4444] bg-[#FEE2E2] text-[#EF4444]" :
-                    "border-[#E7E5E4] opacity-50"
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
+              {q.options.map((opt, oi) => {
+                const isCorrect = oi === q.correct;
+                return (
+                  <button
+                    key={oi}
+                    onClick={() => {
+                      if (answered === null) {
+                        setAnswered(oi);
+                        if (isCorrect) {
+                          const store = useProgressStore.getState();
+                          store.addXP(20);
+                          store.incrementSessions();
+                        }
+                      }
+                    }}
+                    disabled={answered !== null}
+                    className={`p-3 rounded-xl text-sm font-medium border-2 transition-all ${
+                      answered === null ? "border-[#E7E5E4] hover:border-[#3B82F6]" :
+                      isCorrect ? "border-[#22C55E] bg-[#DCFCE7] text-[#22C55E]" :
+                      oi === answered && !isCorrect ? "border-[#EF4444] bg-[#FEE2E2] text-[#EF4444]" :
+                      "border-[#E7E5E4] opacity-50"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
             </div>
             {answered !== null && (
               <motion.p
