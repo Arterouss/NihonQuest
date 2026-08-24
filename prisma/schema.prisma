@@ -1,0 +1,384 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?
+  image         String?
+  role          Role      @default(USER)
+  jlptTarget    String?   @default("N5")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  progress      UserProgress[]
+  quizAttempts  QuizAttempt[]
+  flashcardReviews FlashcardReview[]
+  achievements  UserAchievement[]
+  studySessions StudySession[]
+  streak        LearningStreak?
+  dailyChallengeAttempts DailyChallengeAttempt[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model UserProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  contentType String   // hiragana, katakana, kanji, vocabulary, grammar, etc.
+  contentId   String
+  completed   Boolean  @default(false)
+  score       Int?
+  attempts    Int      @default(0)
+  mastery     Float    @default(0)
+  lastStudied DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentType, contentId])
+  @@map("user_progress")
+}
+
+model HiraganaChar {
+  id          String   @id @default(cuid())
+  character   String
+  romaji      String
+  category    String   // basic, dakuten, handakuten, combination, small
+  order       Int
+  audioUrl    String?
+  strokeOrder String?
+  examples    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("hiragana_chars")
+}
+
+model KatakanaChar {
+  id          String   @id @default(cuid())
+  character   String
+  romaji      String
+  category    String
+  order       Int
+  audioUrl    String?
+  strokeOrder String?
+  examples    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("katakana_chars")
+}
+
+model Kanji {
+  id           String   @id @default(cuid())
+  character    String   @unique
+  meaning      String
+  onyomi       String[]
+  kunyomi      String[]
+  strokeCount  Int
+  strokeOrder  String?
+  jlptLevel    String   // N5, N4, N3, N2, N1
+  examples     Json?
+  sentences    Json?
+  audioUrl     String?
+  relatedKanji String[]
+  published    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  flashcards   Flashcard[]
+
+  @@map("kanji")
+}
+
+model Vocabulary {
+  id           String   @id @default(cuid())
+  japanese     String
+  reading      String
+  meaning      String
+  romaji       String?
+  audioUrl     String?
+  exampleJp    String?
+  exampleId    String?
+  jlptLevel    String   // N5, N4, N3, N2, N1
+  category     String?  // daily, family, food, etc.
+  partOfSpeech String?
+  published    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  flashcards   Flashcard[]
+
+  @@map("vocabulary")
+}
+
+model Grammar {
+  id          String   @id @default(cuid())
+  pattern     String
+  meaning     String
+  formation   String
+  explanation String
+  jlptLevel   String
+  commonMistakes String?
+  relatedGrammar String[]
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  examples    GrammarExample[]
+
+  @@map("grammar")
+}
+
+model GrammarExample {
+  id        String   @id @default(cuid())
+  grammarId String
+  japanese  String
+  reading   String?
+  meaning   String
+  audioUrl  String?
+  createdAt DateTime @default(now())
+
+  grammar   Grammar  @relation(fields: [grammarId], references: [id], onDelete: Cascade)
+
+  @@map("grammar_examples")
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  title       String
+  titleJp     String?
+  description String?
+  type        String   // hiragana, katakana, kanji, vocabulary, grammar, etc.
+  jlptLevel   String?
+  order       Int
+  content     Json?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("lessons")
+}
+
+model ListeningLesson {
+  id          String   @id @default(cuid())
+  title       String
+  audioUrl    String
+  transcript  String?
+  jlptLevel   String
+  difficulty  String   // easy, medium, hard
+  questions   Json?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("listening_lessons")
+}
+
+model ReadingLesson {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  jlptLevel   String
+  questions   Json?
+  vocabulary  Json?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("reading_lessons")
+}
+
+model ConversationLesson {
+  id          String   @id @default(cuid())
+  title       String
+  category    String   // greetings, shopping, etc.
+  dialogue    Json
+  choices     Json?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("conversation_lessons")
+}
+
+model QuizQuestion {
+  id            String   @id @default(cuid())
+  type          String   // multiple_choice, fill_blank, matching, etc.
+  question      String
+  options       Json?
+  correctAnswer String
+  explanation   String?
+  category      String?  // hiragana, katakana, kanji, vocabulary, grammar
+  jlptLevel     String?
+  audioUrl      String?
+  published     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  attempts      QuizAttempt[]
+
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  answer     String
+  correct    Boolean
+  timeSpent  Int?
+  createdAt  DateTime @default(now())
+
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_attempts")
+}
+
+model Flashcard {
+  id           String   @id @default(cuid())
+  front        String
+  back         String
+  reading      String?
+  meaning      String?
+  audioUrl     String?
+  type         String   // vocabulary, kanji, grammar
+  jlptLevel    String?
+  vocabularyId String?
+  kanjiId      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  vocabulary   Vocabulary? @relation(fields: [vocabularyId], references: [id], onDelete: SetNull)
+  kanji        Kanji?      @relation(fields: [kanjiId], references: [id], onDelete: SetNull)
+  reviews      FlashcardReview[]
+
+  @@map("flashcards")
+}
+
+model FlashcardReview {
+  id          String   @id @default(cuid())
+  userId      String
+  flashcardId String
+  rating      String   // again, hard, good, easy
+  nextReview  DateTime
+  interval    Int      @default(1)
+  ease        Float    @default(2.5)
+  repetition  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcard   Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, flashcardId])
+  @@map("flashcard_reviews")
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  name        String
+  nameJp      String?
+  description String
+  icon        String
+  category    String
+  xpReward    Int      @default(0)
+  condition   Json?
+  createdAt   DateTime @default(now())
+
+  users       UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime    @default(now())
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model DailyChallenge {
+  id          String   @id @default(cuid())
+  date        DateTime @unique
+  kanjiIds    String[]
+  vocabIds    String[]
+  grammarIds  String[]
+  questionIds String[]
+  xpReward    Int      @default(100)
+  createdAt   DateTime @default(now())
+
+  attempts    DailyChallengeAttempt[]
+
+  @@map("daily_challenges")
+}
+
+model DailyChallengeAttempt {
+  id          String         @id @default(cuid())
+  userId      String
+  challengeId String
+  completed   Boolean        @default(false)
+  score       Int?
+  xpEarned    Int?
+  createdAt   DateTime       @default(now())
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge   DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+  @@map("daily_challenge_attempts")
+}
+
+model StudySession {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  duration    Int      // seconds
+  xpEarned    Int      @default(0)
+  itemsStudied Int     @default(0)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("study_sessions")
+}
+
+model LearningStreak {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  currentStreak  Int      @default(0)
+  longestStreak  Int      @default(0)
+  lastStudyDate  DateTime?
+  totalXp        Int      @default(0)
+  level          Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("learning_streaks")
+}
