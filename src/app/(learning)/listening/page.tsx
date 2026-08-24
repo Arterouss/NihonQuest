@@ -160,7 +160,7 @@ export default function ListeningPage() {
                         setAnswered(oi);
                         if (isCorrect) {
                           const store = useProgressStore.getState();
-                          store.addXP(20);
+                          store.addXP(20, "Listening", false);
                           store.incrementSessions();
                         }
                       }

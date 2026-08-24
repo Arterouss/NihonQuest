@@ -6,31 +6,6 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useEffect, useState } from "react";
 import { useProgressStore } from "@/store/useProgressStore";
 
-const weeklyData = [
-  { day: "Sen", xp: 120, items: 8 },
-  { day: "Sel", xp: 200, items: 15 },
-  { day: "Rab", xp: 80, items: 5 },
-  { day: "Kam", xp: 250, items: 18 },
-  { day: "Jum", xp: 180, items: 12 },
-  { day: "Sab", xp: 300, items: 22 },
-  { day: "Min", xp: 240, items: 16 },
-];
-
-const radarData = [
-  { subject: "Hiragana", A: 90 },
-  { subject: "Katakana", A: 75 },
-  { subject: "Kanji", A: 45 },
-  { subject: "Kosakata", A: 60 },
-  { subject: "Tata Bahasa", A: 55 },
-  { subject: "Listening", A: 40 },
-  { subject: "Reading", A: 50 },
-];
-
-const jlptProgress = [
-  { name: "Selesai", value: 32, color: "#D95F76" },
-  { name: "Tersisa", value: 68, color: "#FCE7EC" },
-];
-
 export default function ProgressPage() {
   const store = useProgressStore();
   const [mounted, setMounted] = useState(false);
@@ -42,7 +17,54 @@ export default function ProgressPage() {
   if (!mounted) return null;
 
   const totalXP = store.xp;
-  const weekXP = weeklyData.reduce((sum, d) => sum + d.xp, 0); // TODO: dynamic weekXP later
+
+  // 1. Compute Weekly Data (Last 7 Days)
+  const days = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+  const weeklyData = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const dayStr = days[d.getDay()];
+    const dateStr = d.toISOString().split("T")[0];
+    return {
+      day: dayStr,
+      xp: store.weeklyXp[dateStr] || 0,
+    };
+  });
+  const weekXP = weeklyData.reduce((sum, d) => sum + d.xp, 0);
+
+  // 2. Compute Radar Data (Skill Stats)
+  // Base maximums for a nice radar chart shape, scaled out of 100
+  const maxItems = {
+    Hiragana: 46,
+    Katakana: 46,
+    Kanji: 80,
+    Kosakata: 800,
+    "Tata Bahasa": 80,
+    Listening: 20,
+    Reading: 20
+  };
+  const radarData = Object.keys(store.skillStats).map(subject => {
+    const stat = store.skillStats[subject];
+    // Calculate percentage based on max expected items or just based on accuracy.
+    // If they haven't done any, default to 10 so the radar isn't empty, or 0.
+    // Let's use completion percentage: (correct / maxItems) * 100
+    const max = maxItems[subject as keyof typeof maxItems] || 100;
+    const percentage = Math.min(Math.floor((stat.correct / max) * 100), 100);
+    return {
+      subject,
+      A: percentage
+    };
+  });
+
+  // 3. Compute JLPT Progress
+  const totalN5Max = 80 + 800 + 80;
+  const totalN5Done = store.jlptN5Progress.kanji + store.jlptN5Progress.vocab + store.jlptN5Progress.grammar;
+  const jlptPercentage = Math.min(Math.floor((totalN5Done / totalN5Max) * 100), 100);
+
+  const jlptProgress = [
+    { name: "Selesai", value: jlptPercentage, color: "#D95F76" },
+    { name: "Tersisa", value: 100 - jlptPercentage, color: "#FCE7EC" },
+  ];
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -146,21 +168,25 @@ export default function ProgressPage() {
               </Pie>
             </PieChart>
             <div className="text-center -mt-4">
-              <div className="text-3xl font-bold text-[#D95F76]">32%</div>
+              <div className="text-3xl font-bold text-[#D95F76]">{jlptPercentage}%</div>
               <div className="text-xs text-[#6B7280]">Selesai</div>
             </div>
             <div className="w-full mt-4 space-y-2">
               <div className="flex justify-between text-xs">
-                <span className="text-[#6B7280]">Pelajaran</span>
-                <span className="font-bold text-[#1F2937]">32 / 100</span>
+                <span className="text-[#6B7280]">Item Selesai</span>
+                <span className="font-bold text-[#1F2937]">{totalN5Done} / {totalN5Max}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-[#6B7280]">Kanji</span>
-                <span className="font-bold text-[#1F2937]">24 / 80</span>
+                <span className="font-bold text-[#1F2937]">{store.jlptN5Progress.kanji} / 80</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-[#6B7280]">Kosakata</span>
-                <span className="font-bold text-[#1F2937]">156 / 800</span>
+                <span className="font-bold text-[#1F2937]">{store.jlptN5Progress.vocab} / 800</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-[#6B7280]">Tata Bahasa</span>
+                <span className="font-bold text-[#1F2937]">{store.jlptN5Progress.grammar} / 80</span>
               </div>
             </div>
           </div>
@@ -202,7 +228,7 @@ export default function ProgressPage() {
         </div>
       </motion.div>
 
-      {/* Weak Areas */}
+      {/* Weak & Strong Areas */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -215,14 +241,10 @@ export default function ProgressPage() {
             Area Lemah
           </h3>
           <div className="space-y-2">
-            {[
-              { label: "Listening", score: "40%" },
-              { label: "Kanji N5", score: "45%" },
-              { label: "Reading", score: "50%" },
-            ].map((item) => (
-              <div key={item.label} className="flex justify-between items-center p-2.5 bg-[#FEE2E2] rounded-xl">
-                <span className="text-sm font-medium text-[#EF4444]">{item.label}</span>
-                <span className="text-sm font-bold text-[#EF4444]">{item.score}</span>
+            {radarData.sort((a, b) => a.A - b.A).slice(0, 3).map((item) => (
+              <div key={item.subject} className="flex justify-between items-center p-2.5 bg-[#FEE2E2] rounded-xl">
+                <span className="text-sm font-medium text-[#EF4444]">{item.subject}</span>
+                <span className="text-sm font-bold text-[#EF4444]">{item.A}%</span>
               </div>
             ))}
           </div>
@@ -233,14 +255,10 @@ export default function ProgressPage() {
             Area Kuat
           </h3>
           <div className="space-y-2">
-            {[
-              { label: "Hiragana", score: "90%" },
-              { label: "Katakana", score: "75%" },
-              { label: "Kosakata Dasar", score: "60%" },
-            ].map((item) => (
-              <div key={item.label} className="flex justify-between items-center p-2.5 bg-[#DCFCE7] rounded-xl">
-                <span className="text-sm font-medium text-[#22C55E]">{item.label}</span>
-                <span className="text-sm font-bold text-[#22C55E]">{item.score}</span>
+            {radarData.sort((a, b) => b.A - a.A).slice(0, 3).map((item) => (
+              <div key={item.subject} className="flex justify-between items-center p-2.5 bg-[#DCFCE7] rounded-xl">
+                <span className="text-sm font-medium text-[#22C55E]">{item.subject}</span>
+                <span className="text-sm font-bold text-[#22C55E]">{item.A}%</span>
               </div>
             ))}
           </div>

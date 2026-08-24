@@ -109,7 +109,7 @@ export default function ReadingPage() {
                           setAnswers({ ...answers, [`${qi}`]: oi });
                           if (isCorrect) {
                             const store = useProgressStore.getState();
-                            store.addXP(20);
+                            store.addXP(20, "Reading", false);
                             store.incrementSessions();
                           }
                         }

@@ -10,10 +10,13 @@ export interface UserProgress {
   studySessions: number;
   lastStudyDate: string | null;
   dailyTasksDone: number[]; // Array of task IDs completed today
+  weeklyXp: Record<string, number>; // Mapping "YYYY-MM-DD" to XP gained
+  skillStats: Record<string, { correct: number; total: number }>; // Tracks correct/total items per category
+  jlptN5Progress: { kanji: number; vocab: number; grammar: number }; // Track items completed per category for N5
 }
 
 interface ProgressState extends UserProgress {
-  addXP: (amount: number) => void;
+  addXP: (amount: number, category?: string, isN5?: boolean) => void;
   incrementSessions: () => void;
   completeDailyTask: (taskId: number) => void;
   checkAndResetDaily: () => void;
@@ -28,6 +31,17 @@ const initialState: UserProgress = {
   studySessions: 0,
   lastStudyDate: null,
   dailyTasksDone: [],
+  weeklyXp: {},
+  skillStats: {
+    Hiragana: { correct: 0, total: 0 },
+    Katakana: { correct: 0, total: 0 },
+    Kanji: { correct: 0, total: 0 },
+    Kosakata: { correct: 0, total: 0 },
+    "Tata Bahasa": { correct: 0, total: 0 },
+    Listening: { correct: 0, total: 0 },
+    Reading: { correct: 0, total: 0 },
+  },
+  jlptN5Progress: { kanji: 0, vocab: 0, grammar: 0 },
 };
 
 export const useProgressStore = create<ProgressState>()(
@@ -35,7 +49,7 @@ export const useProgressStore = create<ProgressState>()(
     (set, get) => ({
       ...initialState,
 
-      addXP: (amount) => {
+      addXP: (amount, category, isN5) => {
         set((state) => {
           let newXp = state.xp + amount;
           let newLevel = state.level;
@@ -47,9 +61,30 @@ export const useProgressStore = create<ProgressState>()(
             nextLevelXp = newLevel * 300;
           }
 
+          const todayStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+          const currentWeeklyXp = state.weeklyXp[todayStr] || 0;
+
+          let newSkillStats = { ...state.skillStats };
+          if (category && newSkillStats[category]) {
+            newSkillStats[category] = {
+              correct: newSkillStats[category].correct + 1,
+              total: newSkillStats[category].total + 1,
+            };
+          }
+
+          let newJlptProgress = { ...state.jlptN5Progress };
+          if (isN5) {
+            if (category === "Kanji") newJlptProgress.kanji += 1;
+            else if (category === "Kosakata" || category === "vocab") newJlptProgress.vocab += 1;
+            else if (category === "Tata Bahasa" || category === "grammar") newJlptProgress.grammar += 1;
+          }
+
           return {
             xp: newXp,
             level: newLevel,
+            weeklyXp: { ...state.weeklyXp, [todayStr]: currentWeeklyXp + amount },
+            skillStats: newSkillStats,
+            jlptN5Progress: newJlptProgress,
           };
         });
       },

@@ -59,6 +59,10 @@ export default function DashboardClient() {
   const xpForNextLevel = userData.level * 300;
   const xpProgress = Math.min(((userData.xp - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100, 100);
 
+  const totalN5Max = 80 + 800 + 80; // kanji + vocab + grammar
+  const totalN5Done = store.jlptN5Progress.kanji + store.jlptN5Progress.vocab + store.jlptN5Progress.grammar;
+  const jlptPercentage = Math.min((totalN5Done / totalN5Max) * 100, 100);
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Welcome Header */}
@@ -114,19 +118,19 @@ export default function DashboardClient() {
                   <h3 className="font-bold text-[#1F2937]">JLPT N5</h3>
                   <p className="text-sm text-[#6B7280]">Sedang Dipelajari</p>
                 </div>
-                <span className="text-2xl font-bold text-[#D95F76]">32%</span>
+                <span className="text-2xl font-bold text-[#D95F76]">{Math.floor(jlptPercentage)}%</span>
               </div>
               <div className="w-full bg-[#FCE7EC] rounded-full h-3">
                 <motion.div
                   className="h-3 rounded-full sakura-gradient"
                   initial={{ width: 0 }}
-                  animate={{ width: "32%" }}
+                  animate={{ width: `${jlptPercentage}%` }}
                   transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
                 />
               </div>
               <div className="flex justify-between mt-2 text-xs text-[#6B7280]">
                 <span>0%</span>
-                <span>32 / 100 pelajaran</span>
+                <span>{totalN5Done} / {totalN5Max} item</span>
                 <span>100%</span>
               </div>
               <Link

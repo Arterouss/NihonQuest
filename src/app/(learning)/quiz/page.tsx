@@ -150,7 +150,14 @@ export default function QuizPage() {
       setFinished(true);
       // Trigger global XP update (10 XP per correct answer)
       const store = useProgressStore.getState();
-      store.addXP(score * 10);
+      let category = "";
+      if (activeTab === "kanji") category = "Kanji";
+      else if (activeTab === "vocab") category = "Kosakata";
+      else if (activeTab === "grammar") category = "Tata Bahasa";
+      
+      const isN5 = activeLevel === "N5";
+
+      store.addXP(score * 10, category, isN5);
       store.incrementSessions();
     }
   };

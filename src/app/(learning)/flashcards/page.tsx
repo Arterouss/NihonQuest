@@ -121,7 +121,23 @@ export default function FlashcardsPage() {
       setFinished(true);
       // Trigger global XP update
       const store = useProgressStore.getState();
-      store.addXP(sessionXP + xpGained);
+      
+      let category = "";
+      if (activeTab === "kanji") category = "Kanji";
+      else if (activeTab === "vocab") category = "Kosakata";
+      else if (activeTab === "grammar") category = "Tata Bahasa";
+      
+      // Since currently all datasets we used are JLPT mapped, check if level is N5
+      // Wait, vocab data uses level: 5 for N5. kanji and grammar use jlpt: "N5".
+      let isN5 = false;
+      const currentItem = cards[currentIndex] as any;
+      if (currentItem) {
+        if (currentItem.jlpt === "N5" || currentItem.level === 5) {
+          isN5 = true;
+        }
+      }
+
+      store.addXP(sessionXP + xpGained, category, isN5);
       store.incrementSessions();
     }
   };
