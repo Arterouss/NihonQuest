@@ -1,41 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Play, Pause, CheckCircle2, Headphones, Volume2 } from "lucide-react";
 
-const listeningExercises = [
-  {
-    id: 1,
-    title: "Perkenalan Diri",
-    level: "N5",
-    duration: "1:30",
-    script: "はじめまして。わたしはさとうゆかです。よろしくおねがいします。",
-    translation: "Salam kenal. Saya Yuka Sato. Senang berkenalan dengan Anda.",
-    questions: [
-      { q: "Apa nama orang dalam audio?", options: ["さとうゆか", "たなかはな", "きむらみき", "やまだゆう"], correct: 0 },
-    ],
-  },
-  {
-    id: 2,
-    title: "Di Restoran",
-    level: "N5",
-    duration: "2:15",
-    script: "いらっしゃいませ！なんめいさまですか？ふたりです。こちらへどうぞ。",
-    translation: "Selamat datang! Berapa orang? Dua orang. Silakan ke sini.",
-    questions: [
-      { q: "Berapa orang yang datang ke restoran?", options: ["1", "2", "3", "4"], correct: 1 },
-    ],
-  },
-];
+import { listeningData, type ListeningExercise } from "@/lib/listeningData";
+
+const listeningExercises = listeningData;
 
 export default function ListeningPage() {
   const [activeEx, setActiveEx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [showScript, setShowScript] = useState(false);
   const [answered, setAnswered] = useState<number | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const ex = listeningExercises[activeEx];
+
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const togglePlay = () => {
+    if (!("speechSynthesis" in window)) {
+      alert("Browser Anda tidak mendukung fitur suara (Speech Synthesis).");
+      return;
+    }
+
+    if (playing) {
+      window.speechSynthesis.cancel();
+      setPlaying(false);
+    } else {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(ex.script);
+      utterance.lang = "ja-JP";
+      utterance.rate = 0.9; // Sedikit lebih lambat agar mudah didengar
+      utterance.onend = () => setPlaying(false);
+      utterance.onerror = () => setPlaying(false);
+      
+      utteranceRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+      setPlaying(true);
+    }
+  };
+
+  const changeExercise = (index: number) => {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setActiveEx(index);
+    setAnswered(null);
+    setShowScript(false);
+    setPlaying(false);
+  };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -56,7 +75,7 @@ export default function ListeningPage() {
         {listeningExercises.map((e, i) => (
           <button
             key={e.id}
-            onClick={() => { setActiveEx(i); setAnswered(null); setShowScript(false); setPlaying(false); }}
+            onClick={() => changeExercise(i)}
             className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
               activeEx === i ? "bg-[#3B82F6] text-white border-[#3B82F6]" : "bg-white border-[#E7E5E4] text-[#6B7280]"
             }`}
@@ -80,7 +99,7 @@ export default function ListeningPage() {
         </div>
 
         {/* Waveform Visual */}
-        <div className="flex items-center gap-1 mb-5 justify-center">
+        <div className="flex items-center gap-1 mb-5 justify-center h-12">
           {Array.from({ length: 30 }).map((_, i) => (
             <motion.div
               key={i}
@@ -91,21 +110,12 @@ export default function ListeningPage() {
           ))}
         </div>
 
-        {/* Progress */}
-        <div className="w-full bg-[#DBEAFE] rounded-full h-2 mb-4">
-          <motion.div
-            className="h-2 rounded-full bg-[#3B82F6]"
-            animate={playing ? { width: "100%" } : { width: "0%" }}
-            transition={playing ? { duration: 5, ease: "linear" } : {}}
-          />
-        </div>
-
         {/* Controls */}
         <div className="flex items-center justify-center gap-4">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setPlaying(!playing)}
+            onClick={togglePlay}
             className="w-14 h-14 rounded-full bg-[#3B82F6] flex items-center justify-center shadow-lg"
           >
             {playing ? <Pause size={22} className="text-white" /> : <Play size={22} className="text-white ml-0.5" />}

@@ -4,189 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, BookOpen, X, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-
-const grammarData = [
-  {
-    pattern: "〜です",
-    meaning: "Adalah / merupakan",
-    formation: "Kata Benda / Kata Sifat-な + です",
-    explanation: "Digunakan di akhir kalimat untuk menyatakan sopan. Bentuk formal dari だ.",
-    jlpt: "N5",
-    examples: [
-      { jp: "私は学生です。", reading: "Watashi wa gakusei desu.", meaning: "Saya adalah pelajar." },
-      { jp: "これは本です。", reading: "Kore wa hon desu.", meaning: "Ini adalah buku." },
-    ],
-    mistakes: "Jangan gunakan です setelah kata sifat-い (い形容詞). Bentuk sopan-nya sudah dengan penambahan です di akhir kata sifat-い.",
-  },
-  {
-    pattern: "〜ます",
-    meaning: "Bentuk sopan kata kerja",
-    formation: "Kata Kerja (bentuk ます)",
-    explanation: "Bentuk sopan dari kata kerja. Digunakan dalam percakapan formal atau dengan orang yang lebih tua/senior.",
-    jlpt: "N5",
-    examples: [
-      { jp: "食べます。", reading: "Tabemasu.", meaning: "Saya makan." },
-      { jp: "学校へ行きます。", reading: "Gakkou e ikimasu.", meaning: "Saya pergi ke sekolah." },
-    ],
-    mistakes: "Jangan bingung antara 食べます (tabemasu - makan) dan 食べません (tabemasen - tidak makan).",
-  },
-  {
-    pattern: "〜は〜が好きです",
-    meaning: "Menyukai sesuatu",
-    formation: "Topik は Objek が 好きです",
-    explanation: "Pola untuk menyatakan kesukaan. Particle が digunakan dengan kata好き (suki).",
-    jlpt: "N5",
-    examples: [
-      { jp: "私は音楽が好きです。", reading: "Watashi wa ongaku ga suki desu.", meaning: "Saya suka musik." },
-      { jp: "彼女は猫が好きです。", reading: "Kanojo wa neko ga suki desu.", meaning: "Dia (perempuan) suka kucing." },
-    ],
-    mistakes: "Jangan gunakan を setelah objek. Harus menggunakan が dengan 好き.",
-  },
-  {
-    pattern: "〜ている",
-    meaning: "Sedang melakukan / kondisi",
-    formation: "Kata Kerja (bentuk て) + いる",
-    explanation: "Digunakan untuk menyatakan tindakan yang sedang berlangsung atau kondisi yang dihasilkan dari tindakan sebelumnya.",
-    jlpt: "N5",
-    examples: [
-      { jp: "本を読んでいる。", reading: "Hon wo yonde iru.", meaning: "Sedang membaca buku." },
-      { jp: "結婚しています。", reading: "Kekkon shite imasu.", meaning: "Sudah menikah. (kondisi)" },
-    ],
-    mistakes: "Hati-hati: 〜ている bisa berarti 'sedang' atau 'sudah dalam kondisi' tergantung kata kerjanya.",
-  },
-  {
-    pattern: "〜たい",
-    meaning: "Ingin melakukan sesuatu",
-    formation: "Kata Kerja (bentuk ます, hilangkan ます) + たい",
-    explanation: "Menyatakan keinginan pembicara untuk melakukan sesuatu. Hanya untuk keinginan diri sendiri, tidak untuk orang lain.",
-    jlpt: "N5",
-    examples: [
-      { jp: "日本へ行きたいです。", reading: "Nihon e ikitai desu.", meaning: "Saya ingin pergi ke Jepang." },
-      { jp: "ラーメンが食べたい。", reading: "Ra-men ga tabetai.", meaning: "Saya ingin makan ramen." },
-    ],
-    mistakes: "Untuk menyatakan keinginan orang lain, gunakan 〜たがっている bukan 〜たい.",
-  },
-  {
-    pattern: "〜ませんか",
-    meaning: "Mengajak melakukan sesuatu",
-    formation: "Kata Kerja (bentuk ます, hilangkan ます) + ませんか",
-    explanation: "Digunakan untuk mengundang atau mengajak seseorang melakukan sesuatu. Lebih sopan dari 〜ましょう.",
-    jlpt: "N5",
-    examples: [
-      { jp: "一緒に食べませんか？", reading: "Issho ni tabemasen ka?", meaning: "Mau makan bersama?" },
-      { jp: "映画を見ませんか？", reading: "Eiga wo mimasen ka?", meaning: "Mau nonton film?" },
-    ],
-    mistakes: "〜ませんか adalah undangan, 〜ましょう adalah ajakan yang lebih langsung/pasti.",
-  },
-  // ── N4 ─────────────────────────────────────────────────────────────
-  {
-    pattern: "〜なければならない",
-    meaning: "Harus / wajib",
-    formation: "Kata Kerja (bentuk ない, hilangkan い) + なければならない",
-    explanation: "Menyatakan kewajiban atau keharusan. Sinonim: 〜なきゃ (kasual).",
-    jlpt: "N4",
-    examples: [
-      { jp: "宿題をしなければならない。", reading: "Shukudai wo shinakereba naranai.", meaning: "Harus mengerjakan PR." },
-      { jp: "明日早く起きなければなりません。", reading: "Ashita hayaku okikereba narimasen.", meaning: "Harus bangun pagi besok." },
-    ],
-    mistakes: "Jangan bingung dengan 〜てもいい (boleh) vs 〜なければならない (harus).",
-  },
-  {
-    pattern: "〜ことができる",
-    meaning: "Bisa / mampu melakukan",
-    formation: "Kata Kerja (bentuk kamus) + ことができる",
-    explanation: "Menyatakan kemampuan atau kemungkinan. Lebih formal dari 〜られる.",
-    jlpt: "N4",
-    examples: [
-      { jp: "日本語を話すことができます。", reading: "Nihongo wo hanasu koto ga dekimasu.", meaning: "Bisa berbicara bahasa Jepang." },
-      { jp: "泳ぐことができない。", reading: "Oyogu koto ga dekinai.", meaning: "Tidak bisa berenang." },
-    ],
-    mistakes: "〜ことができる lebih formal, sedangkan 〜られる lebih umum digunakan dalam percakapan.",
-  },
-  {
-    pattern: "〜てみる",
-    meaning: "Mencoba melakukan sesuatu",
-    formation: "Kata Kerja (bentuk て) + みる",
-    explanation: "Menyatakan tindakan yang dilakukan sebagai percobaan atau untuk mengetahui hasilnya.",
-    jlpt: "N4",
-    examples: [
-      { jp: "この料理を食べてみてください。", reading: "Kono ryouri wo tabete mite kudasai.", meaning: "Coba makan masakan ini." },
-      { jp: "日本語で話してみた。", reading: "Nihongo de hanashite mita.", meaning: "Mencoba berbicara dalam bahasa Jepang." },
-    ],
-    mistakes: "〜てみる menunjukkan 'mencoba sebagai eksperimen', berbeda dari 〜ようとする (berusaha melakukan).",
-  },
-  {
-    pattern: "〜らしい",
-    meaning: "Tampaknya / sepertinya (berdasarkan info)",
-    formation: "Kata Benda / Kata Sifat / Kata Kerja + らしい",
-    explanation: "Menyatakan dugaan berdasarkan informasi yang didengar atau diketahui. Berbeda dari 〜そう (berdasarkan penampilan).",
-    jlpt: "N4",
-    examples: [
-      { jp: "彼は医者らしい。", reading: "Kare wa isha rashii.", meaning: "Tampaknya dia dokter." },
-      { jp: "明日は雨らしいです。", reading: "Ashita wa ame rashii desu.", meaning: "Sepertinya besok hujan." },
-    ],
-    mistakes: "〜らしい (dari info luar) berbeda dari 〜ようだ (dari pengamatan langsung) dan 〜そうだ (dari penampilan fisik).",
-  },
-  {
-    pattern: "〜ために",
-    meaning: "Untuk (tujuan) / karena (sebab)",
-    formation: "Kata Kerja / Kata Benda + ために",
-    explanation: "Menyatakan tujuan (untuk melakukan sesuatu) atau penyebab. Konteksnya tergantung pada kata sebelumnya.",
-    jlpt: "N4",
-    examples: [
-      { jp: "日本語を勉強するために、日本へ来た。", reading: "Nihongo wo benkyou suru tame ni, Nihon e kita.", meaning: "Datang ke Jepang untuk belajar bahasa Jepang." },
-      { jp: "病気のために休んだ。", reading: "Byouki no tame ni yasunda.", meaning: "Absen karena sakit." },
-    ],
-    mistakes: "Untuk tujuan, gunakan Kata Kerja + ために. Untuk alasan/sebab, gunakan Kata Benda + のために.",
-  },
-  // ── N3 ─────────────────────────────────────────────────────────────
-  {
-    pattern: "〜ばかりか〜も",
-    meaning: "Tidak hanya ... tapi juga ...",
-    formation: "A + ばかりか + B + も",
-    explanation: "Menyatakan bahwa tidak hanya A, tetapi B juga berlaku. Menunjukkan penambahan yang mengejutkan.",
-    jlpt: "N3",
-    examples: [
-      { jp: "彼は日本語ばかりか中国語も話せる。", reading: "Kare wa Nihongo bakari ka Chuugokugo mo hanaseru.", meaning: "Dia tidak hanya bisa bahasa Jepang, tapi juga bahasa China." },
-    ],
-    mistakes: "Jangan bingung dengan 〜だけでなく, keduanya mirip tapi 〜ばかりか lebih menekankan kejutan.",
-  },
-  {
-    pattern: "〜さえ〜ば",
-    meaning: "Asal saja / selama",
-    formation: "Kata Benda + さえ / Kata Kerja (bentuk て) + さえいれば",
-    explanation: "Menyatakan kondisi minimum yang diperlukan. 'Asal kondisi X terpenuhi, hasilnya Y.'",
-    jlpt: "N3",
-    examples: [
-      { jp: "お金さえあれば何でも買える。", reading: "Okane sae areba nandemo kaeru.", meaning: "Asal ada uang, bisa beli apa saja." },
-      { jp: "練習さえすれば上手になる。", reading: "Renshuu sae sureba jouzu ni naru.", meaning: "Asal berlatih, pasti mahir." },
-    ],
-    mistakes: "〜さえ〜ば menekankan MINIMUM yang diperlukan, bukan syarat biasa.",
-  },
-  {
-    pattern: "〜に違いない",
-    meaning: "Pasti / tidak diragukan lagi",
-    formation: "Kata Kerja / Kata Sifat / Kata Benda + に違いない",
-    explanation: "Menyatakan keyakinan kuat dari pembicara berdasarkan logika atau bukti. Lebih kuat dari 〜はずだ.",
-    jlpt: "N3",
-    examples: [
-      { jp: "彼はもう家に着いたに違いない。", reading: "Kare wa mou ie ni tsuita ni chigainai.", meaning: "Dia pasti sudah sampai di rumah." },
-    ],
-    mistakes: "〜に違いない adalah keyakinan pribadi yang kuat, 〜はずだ adalah perkiraan logis.",
-  },
-  {
-    pattern: "〜わけではない",
-    meaning: "Bukan berarti / tidak selalu",
-    formation: "Kata Kerja / Kata Sifat + わけではない",
-    explanation: "Menolak kesimpulan atau asumsi yang mungkin ditarik dari situasi. 'Bukan berarti...' atau 'Tidak selalu...'",
-    jlpt: "N3",
-    examples: [
-      { jp: "お金が全てというわけではない。", reading: "Okane ga subete to iu wake dewa nai.", meaning: "Bukan berarti uang adalah segalanya." },
-      { jp: "嫌いなわけではないが、好きでもない。", reading: "Kirai na wake dewa nai ga, suki demo nai.", meaning: "Bukan berarti aku benci, tapi juga tidak suka." },
-    ],
-    mistakes: "〜わけではない digunakan untuk memberi klarifikasi atau koreksi terhadap asumsi orang lain.",
-  },
-];
+import { grammarData, type GrammarEntry } from "@/lib/grammarData";
 
 const jlptColors: Record<string, { bg: string; text: string }> = {
   N5: { bg: "#DCFCE7", text: "#22C55E" },
@@ -196,7 +14,7 @@ const jlptColors: Record<string, { bg: string; text: string }> = {
   N1: { bg: "#FEE2E2", text: "#EF4444" },
 };
 
-function GrammarCard({ grammar }: { grammar: typeof grammarData[0] }) {
+function GrammarCard({ grammar }: { grammar: GrammarEntry }) {
   const [expanded, setExpanded] = useState(false);
   const c = jlptColors[grammar.jlpt];
 
@@ -279,6 +97,12 @@ function GrammarCard({ grammar }: { grammar: typeof grammarData[0] }) {
 
 export default function GrammarPage() {
   const [activeLevel, setActiveLevel] = useState("N5");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
+  const levelData = grammarData.filter(g => g.jlpt === activeLevel);
+  const totalPages = Math.ceil(levelData.length / ITEMS_PER_PAGE);
+  const paginatedGrammar = levelData.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -301,7 +125,7 @@ export default function GrammarPage() {
           return (
             <button
               key={level}
-              onClick={() => setActiveLevel(level)}
+              onClick={() => { setActiveLevel(level); setCurrentPage(1); }}
               className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border`}
               style={
                 activeLevel === level
@@ -320,17 +144,40 @@ export default function GrammarPage() {
 
       {/* Grammar List */}
       <div className="space-y-3">
-        {grammarData.filter(g => g.jlpt === activeLevel).length === 0 ? (
+        {levelData.length === 0 ? (
           <div className="text-center py-12 text-[#6B7280]">
             <div className="text-4xl mb-3">📚</div>
             <p className="font-medium">Materi {activeLevel} akan segera hadir!</p>
           </div>
         ) : (
-          grammarData.filter(g => g.jlpt === activeLevel).map((g) => (
+          paginatedGrammar.map((g) => (
             <GrammarCard key={g.pattern} grammar={g} />
           ))
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 mt-8 pb-8">
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 rounded-xl border border-[#E7E5E4] bg-white text-[#1F2937] font-semibold disabled:opacity-50 hover:bg-gray-50 transition-all text-sm"
+          >
+            Sebelumnya
+          </button>
+          <span className="text-sm font-medium text-[#6B7280]">
+            Halaman {currentPage} dari {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 rounded-xl border border-[#E7E5E4] bg-white text-[#1F2937] font-semibold disabled:opacity-50 hover:bg-gray-50 transition-all text-sm"
+          >
+            Selanjutnya
+          </button>
+        </div>
+      )}
     </div>
   );
 }

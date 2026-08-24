@@ -4,36 +4,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, ChevronRight, Play } from "lucide-react";
 
-const dialogues = [
-  {
-    id: 1,
-    title: "Perkenalan Diri",
-    level: "N5",
-    scenario: "Pertemuan pertama dengan seseorang",
-    lines: [
-      { speaker: "A", jp: "はじめまして。わたしはやまださくらです。", reading: "Hajimemashite. Watashi wa Yamada Sakura desu.", meaning: "Salam kenal. Saya Yamada Sakura." },
-      { speaker: "B", jp: "はじめまして。わたしはすずきたろうです。よろしくおねがいします。", reading: "Hajimemashite. Watashi wa Suzuki Taro desu. Yoroshiku onegaishimasu.", meaning: "Salam kenal. Saya Suzuki Taro. Senang berkenalan." },
-      { speaker: "A", jp: "こちらこそ、よろしくおねがいします。おしごとは？", reading: "Kochira koso, yoroshiku onegaishimasu. Oshigoto wa?", meaning: "Sama-sama, senang berkenalan. Pekerjaan Anda?" },
-      { speaker: "B", jp: "わたしはかいしゃいんです。やまださんは？", reading: "Watashi wa kaishain desu. Yamada-san wa?", meaning: "Saya karyawan perusahaan. Bagaimana dengan Yamada-san?" },
-      { speaker: "A", jp: "わたしはがくせいです。だいがくさんねんせいです。", reading: "Watashi wa gakusei desu. Daigaku 3-nensei desu.", meaning: "Saya mahasiswa. Mahasiswa tahun ketiga." },
-    ],
-  },
-  {
-    id: 2,
-    title: "Di Kafe",
-    level: "N5",
-    scenario: "Memesan di kafe Jepang",
-    lines: [
-      { speaker: "Pelayan", jp: "いらっしゃいませ！なにになさいますか？", reading: "Irasshaimase! Nani ni nasaimasu ka?", meaning: "Selamat datang! Mau pesan apa?" },
-      { speaker: "Kamu", jp: "えーと、コーヒーをひとつください。", reading: "E-to, ko-hi- wo hitotsu kudasai.", meaning: "Hmm, kopi satu, tolong." },
-      { speaker: "Pelayan", jp: "ホットとアイス、どちらになさいますか？", reading: "Hotto to aisu, dochira ni nasaimasu ka?", meaning: "Panas atau dingin, yang mana?" },
-      { speaker: "Kamu", jp: "ホットでおねがいします。いくらですか？", reading: "Hotto de onegaishimasu. Ikura desu ka?", meaning: "Panas, tolong. Berapa harganya?" },
-      { speaker: "Pelayan", jp: "さんびゃくえんです。", reading: "Sanbyaku en desu.", meaning: "300 yen." },
-    ],
-  },
-];
+import { conversationData, type Dialogue } from "@/lib/conversationData";
 
-type Dialogue = typeof dialogues[0];
+const dialogues = conversationData;
 
 export default function ConversationPage() {
   const [activeDialogue, setActiveDialogue] = useState<Dialogue | null>(null);
