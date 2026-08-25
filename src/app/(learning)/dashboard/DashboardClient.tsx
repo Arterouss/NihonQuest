@@ -45,6 +45,7 @@ export default function DashboardClient() {
   // Prevent hydration mismatch for localStorage
   useEffect(() => {
     store.checkAndResetDaily();
+    store.syncFromDB();
     setMounted(true);
   }, []);
 

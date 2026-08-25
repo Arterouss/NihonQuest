@@ -22,6 +22,7 @@ interface ProgressState extends UserProgress {
   completeDailyTask: (taskId: number) => void;
   completePath: (pathId: number) => void;
   checkAndResetDaily: () => void;
+  syncFromDB: () => Promise<void>;
 }
 
 const initialState: UserProgress = {
@@ -90,6 +91,13 @@ export const useProgressStore = create<ProgressState>()(
             jlptN5Progress: newJlptProgress,
           };
         });
+
+        // Sync with DB
+        fetch("/api/user/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ xpAmount: amount, category, isN5 })
+        }).catch(err => console.error("Failed to sync progress:", err));
       },
 
       incrementSessions: () => {
@@ -151,6 +159,25 @@ export const useProgressStore = create<ProgressState>()(
           }
           return state;
         });
+      },
+
+      syncFromDB: async () => {
+        try {
+          const res = await fetch("/api/user/sync");
+          if (res.ok) {
+            const json = await res.json();
+            if (json.success && json.data) {
+              set((state) => ({
+                ...state,
+                xp: json.data.totalXp,
+                level: json.data.level,
+                completedPaths: json.data.completedPaths || state.completedPaths,
+              }));
+            }
+          }
+        } catch (error) {
+          console.error("Failed to sync from DB:", error);
+        }
       }
     }),
     {
