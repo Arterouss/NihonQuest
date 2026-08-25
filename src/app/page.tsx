@@ -82,7 +82,7 @@ function Navbar() {
               href="/dashboard"
               className="text-[#6B7280] hover:text-[#D95F76] font-medium text-sm transition-colors"
             >
-              Dashboard (Offline)
+              Dashboard
             </Link>
             <Link
               href="/dashboard"
@@ -125,7 +125,7 @@ function Navbar() {
               ))}
               <hr className="border-[#E7E5E4]" />
               <Link href="/dashboard" className="text-[#6B7280] font-medium py-2">
-                Dashboard (Offline)
+                Dashboard
               </Link>
               <Link
                 href="/dashboard"
