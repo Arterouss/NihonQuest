@@ -69,6 +69,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
+        name: session.user.name || "Pelajar",
         totalXp: streak?.totalXp || 0,
         level: streak?.level || 1,
         completedPaths,

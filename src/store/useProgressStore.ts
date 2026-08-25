@@ -169,6 +169,7 @@ export const useProgressStore = create<ProgressState>()(
             if (json.success && json.data) {
               set((state) => ({
                 ...state,
+                name: json.data.name || state.name,
                 xp: json.data.totalXp,
                 level: json.data.level,
                 completedPaths: json.data.completedPaths || state.completedPaths,
