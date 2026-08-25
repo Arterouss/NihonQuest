@@ -31,7 +31,7 @@ export default function LoginPage() {
       setLoading(false);
     } else {
       const session = await getSession();
-      if (session?.user?.role === "ADMIN") {
+      if ((session?.user as any)?.role === "ADMIN") {
         router.push("/admin");
       } else {
         router.push("/dashboard");

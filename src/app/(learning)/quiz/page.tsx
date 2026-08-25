@@ -151,11 +151,11 @@ export default function QuizPage() {
       // Trigger global XP update (10 XP per correct answer)
       const store = useProgressStore.getState();
       let category = "";
-      if (activeTab === "kanji") category = "Kanji";
-      else if (activeTab === "vocab") category = "Kosakata";
-      else if (activeTab === "grammar") category = "Tata Bahasa";
+      if (quizType === "kanji") category = "Kanji";
+      else if (quizType === "vocab") category = "Kosakata";
+      else if (quizType === "grammar") category = "Tata Bahasa";
       
-      const isN5 = activeLevel === "N5";
+      const isN5 = level === "N5";
 
       store.addXP(score * 10, category, isN5);
       store.incrementSessions();
