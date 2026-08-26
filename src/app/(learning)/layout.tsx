@@ -10,7 +10,7 @@ import {
   Layers, Brain, MessageCircle, Headphones, FileText,
   Zap, Target, Trophy, User, LogOut, Menu, X,
   ChevronRight, Flame, BarChart2, Map, Search,
-  Calendar,
+  Calendar, Bot,
 } from "lucide-react";
 
 const navItems = [
@@ -22,6 +22,7 @@ const navItems = [
   { href: "/kanji", icon: <span className="font-jp font-bold text-sm">漢</span>, label: "Kanji" },
   { href: "/vocabulary", icon: <BookMarked size={18} />, label: "Kosakata" },
   { href: "/grammar", icon: <AlignJustify size={18} />, label: "Tata Bahasa" },
+  { href: "/ai-sensei", icon: <Bot size={18} className="text-[#D95F76]" />, label: "Sensei AI" },
   { href: "/conversation", icon: <MessageCircle size={18} />, label: "Percakapan" },
   { type: "divider", label: "LATIHAN" },
   { href: "/listening", icon: <Headphones size={18} />, label: "Listening" },
