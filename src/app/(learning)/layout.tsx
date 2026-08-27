@@ -10,7 +10,7 @@ import {
   Layers, Brain, MessageCircle, Headphones, FileText,
   Zap, Target, Trophy, User, LogOut, Menu, X,
   ChevronRight, Flame, BarChart2, Map, Search,
-  Calendar,
+  Calendar, Mic, PenLine, Music, BookHeart,
 } from "lucide-react";
 
 const navItems = [
@@ -22,8 +22,12 @@ const navItems = [
   { href: "/kanji", icon: <span className="font-jp font-bold text-sm">漢</span>, label: "Kanji" },
   { href: "/vocabulary", icon: <BookMarked size={18} />, label: "Kosakata" },
   { href: "/grammar", icon: <AlignJustify size={18} />, label: "Tata Bahasa" },
+  { href: "/pitch-accent", icon: <Music size={18} />, label: "Pitch Accent" },
+  { href: "/keigo", icon: <BookHeart size={18} />, label: "Keigo & Budaya" },
   { href: "/conversation", icon: <MessageCircle size={18} />, label: "Percakapan" },
   { type: "divider", label: "LATIHAN" },
+  { href: "/speaking", icon: <Mic size={18} />, label: "Latihan Bicara" },
+  { href: "/writing", icon: <PenLine size={18} />, label: "Latihan Menulis" },
   { href: "/listening", icon: <Headphones size={18} />, label: "Listening" },
   { href: "/reading", icon: <BookOpen size={18} />, label: "Reading" },
   { href: "/flashcards", icon: <Layers size={18} />, label: "Flashcard" },
