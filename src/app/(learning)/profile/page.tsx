@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { User, Zap, Flame, Trophy, Target, BookOpen, Calendar, Edit2, Camera } from "lucide-react";
 import Link from "next/link";
+import { useAchievementStore, ACHIEVEMENTS_LIST } from "@/store/useAchievementStore";
 
 const userStats = {
   name: "Budi Santoso",
@@ -17,14 +18,10 @@ const userStats = {
   quizAccuracy: 78,
 };
 
-const achievements = [
-  { icon: "あ", name: "Hiragana Master", color: "#D95F76" },
-  { icon: "🔥", name: "7 Hari Streak", color: "#F97316" },
-  { icon: "🧠", name: "Kuis Pertama", color: "#3B82F6" },
-  { icon: "⭐", name: "Level 5", color: "#F2B84B" },
-];
-
 export default function ProfilePage() {
+  const { unlockedIds } = useAchievementStore();
+  const unlockedAchievements = ACHIEVEMENTS_LIST.filter(a => unlockedIds.includes(a.id)).slice(0, 4);
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Profile Card */}
@@ -119,25 +116,31 @@ export default function ProfilePage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="bg-white rounded-2xl border border-[#E7E5E4] p-6"
+        className="bg-white rounded-2xl border border-[#E7E5E4] p-6 lg:col-span-2"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-[#1F2937]">Pencapaian Terbaru</h2>
+          <h2 className="font-bold text-[#1F2937] flex items-center gap-2">
+            <Trophy size={18} className="text-[#F2B84B]" />
+            Pencapaian Terbaru
+          </h2>
           <Link href="/achievements" className="text-xs font-semibold text-[#D95F76]">Lihat Semua</Link>
         </div>
-        <div className="grid grid-cols-4 gap-3">
-          {achievements.map((a) => (
-            <div key={a.name} className="flex flex-col items-center gap-2 text-center">
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
-                style={{ backgroundColor: a.color + "20" }}
-              >
-                {a.icon}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {unlockedAchievements.length > 0 ? (
+            unlockedAchievements.map((a, i) => (
+              <div key={i} className="flex flex-col items-center justify-center p-4 rounded-xl border border-[#E7E5E4] bg-gray-50 text-center">
+                <div 
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl mb-2"
+                  style={{ backgroundColor: a.color + "20" }}
+                >
+                  {a.icon}
+                </div>
+                <span className="text-xs font-bold text-[#1F2937] leading-tight">{a.name}</span>
               </div>
-              <span className="text-xs text-[#6B7280] leading-tight">{a.name}</span>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-sm text-gray-400 col-span-4 text-center py-4">Belum ada achievement yang terbuka.</p>
+          )}
         </div>
       </motion.div>
 

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff, Volume2, RefreshCw, CheckCircle, ChevronRight, ChevronLeft, Headphones } from "lucide-react";
+import { useAchievementStore } from "@/store/useAchievementStore";
 
 const speakingWords = [
   { jp: "おはようございます", reading: "Ohayou gozaimasu", meaning: "Selamat Pagi (Formal)", level: "N5" },
@@ -43,7 +44,13 @@ export default function SpeakingPage() {
     window.speechSynthesis.speak(utterance);
   }, [word.jp]);
 
+  const { unlockAchievement } = useAchievementStore();
+
   const startListening = useCallback(() => {
+    if (!("webkitSpeechRecognition" in window)) {
+      alert("Browser Anda tidak mendukung fitur rekam suara (Speech Recognition). Gunakan Google Chrome.");
+      return;
+    }
     const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = "ja-JP";
@@ -58,6 +65,7 @@ export default function SpeakingPage() {
       const heardClean = heard.replace(/[。、！？\s]/g, "");
       if (heardClean === target.replace(/\s/g, "")) {
         setResult("correct");
+        unlockAchievement("suara-emas");
       } else if (heardClean.length >= target.length * 0.6) {
         setResult("close");
       } else {

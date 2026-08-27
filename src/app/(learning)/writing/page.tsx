@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Eraser, PenLine, ChevronLeft, ChevronRight, Info } from "lucide-react";
+import { useAchievementStore } from "@/store/useAchievementStore";
 
 const writingChars = [
   { char: "日", reading: "にち / ひ (Nichi / Hi)", meaning: "Hari / Matahari", strokes: 4, hint: "Kotak persegi panjang dengan garis di tengah" },
@@ -77,7 +78,14 @@ export default function WritingPage() {
     lastPos.current = pos;
   };
 
-  const stopDraw = () => setIsDrawing(false);
+  const { unlockAchievement } = useAchievementStore();
+
+  const stopDraw = () => {
+    if (isDrawing && hasDrawn) {
+      unlockAchievement("seniman-kanji");
+    }
+    setIsDrawing(false);
+  };
 
   const clearCanvas = () => {
     const ctx = canvasRef.current?.getContext("2d");

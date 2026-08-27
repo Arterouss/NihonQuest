@@ -13,6 +13,8 @@ import {
   Calendar, Mic, PenLine, Music, BookHeart,
 } from "lucide-react";
 
+import AchievementToast from "@/components/AchievementToast";
+
 const navItems = [
   { href: "/dashboard", icon: <LayoutDashboard size={18} />, label: "Dashboard" },
   { href: "/path", icon: <Map size={18} />, label: "Jalur Belajar" },
@@ -122,7 +124,8 @@ export default function LearningLayout({ children }: { children: React.ReactNode
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-[#FFF9F7] overflow-hidden">
+    <div className="flex h-screen bg-[#F9FAFB] font-sans overflow-hidden">
+      <AchievementToast />
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-[#E7E5E4] flex-shrink-0">
         <SidebarContent />

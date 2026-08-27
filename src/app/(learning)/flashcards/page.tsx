@@ -7,6 +7,7 @@ import { kanjiData } from "@/lib/kanjiData";
 import { vocabularyData } from "@/lib/vocabularyData";
 import { grammarData } from "@/lib/grammarData";
 import { useProgressStore } from "@/store/useProgressStore";
+import { useAchievementStore } from "@/store/useAchievementStore";
 
 type Rating = "again" | "hard" | "good" | "easy";
 type DeckType = "vocab" | "kanji" | "grammar";
@@ -131,6 +132,9 @@ export default function FlashcardsPage() {
 
       store.addXP(sessionXP + xpGained, category, isN5);
       store.incrementSessions();
+
+      const { unlockAchievement } = useAchievementStore.getState();
+      unlockAchievement("flashcard-100"); // As a milestone
     }
   };
 
