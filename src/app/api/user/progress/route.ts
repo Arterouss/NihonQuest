@@ -10,9 +10,55 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { xpAmount, category, isN5 } = body;
-
     const userId = session.user.id;
+
+    // Handle mastery item tracking (new functionality)
+    if (body.contentType && body.contentId !== undefined) {
+      const { contentType, contentId, completed } = body;
+      
+      if (completed) {
+        await prisma.userProgress.upsert({
+          where: {
+            userId_contentType_contentId: {
+              userId,
+              contentType,
+              contentId,
+            },
+          },
+          create: {
+            userId,
+            contentType,
+            contentId,
+            completed: true,
+            mastery: 1.0,
+            attempts: 1,
+          },
+          update: {
+            completed: true,
+            mastery: 1.0,
+            attempts: { increment: 1 },
+          },
+        });
+      } else {
+        // Unmark mastery — delete the record or set completed to false
+        await prisma.userProgress.updateMany({
+          where: {
+            userId,
+            contentType,
+            contentId,
+          },
+          data: {
+            completed: false,
+            mastery: 0,
+          },
+        });
+      }
+
+      return NextResponse.json({ success: true });
+    }
+
+    // Handle XP tracking (existing functionality)
+    const { xpAmount, category, isN5 } = body;
 
     // Ambil atau buat LearningStreak
     let streak = await prisma.learningStreak.findUnique({

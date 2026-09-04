@@ -1,5 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useAchievementStore } from "./useAchievementStore";
+
+export type MasteryType = "hiragana" | "katakana" | "kanji" | "vocab";
 
 export interface UserProgress {
   name: string;
@@ -14,6 +17,11 @@ export interface UserProgress {
   skillStats: Record<string, { correct: number; total: number }>; // Tracks correct/total items per category
   jlptN5Progress: { kanji: number; vocab: number; grammar: number }; // Track items completed per category for N5
   completedPaths: number[]; // Array of path node IDs that are completed
+  // Mastery tracking
+  masteredHiragana: string[];
+  masteredKatakana: string[];
+  masteredKanji: string[];
+  masteredVocab: string[];
 }
 
 interface ProgressState extends UserProgress {
@@ -23,6 +31,8 @@ interface ProgressState extends UserProgress {
   completePath: (pathId: number) => void;
   checkAndResetDaily: () => void;
   syncFromDB: () => Promise<void>;
+  toggleMastered: (type: MasteryType, item: string) => void;
+  isMastered: (type: MasteryType, item: string) => boolean;
 }
 
 const initialState: UserProgress = {
@@ -46,7 +56,37 @@ const initialState: UserProgress = {
   },
   jlptN5Progress: { kanji: 0, vocab: 0, grammar: 0 },
   completedPaths: [],
+  masteredHiragana: [],
+  masteredKatakana: [],
+  masteredKanji: [],
+  masteredVocab: [],
 };
+
+function getMasteryKey(type: MasteryType): keyof Pick<UserProgress, "masteredHiragana" | "masteredKatakana" | "masteredKanji" | "masteredVocab"> {
+  switch (type) {
+    case "hiragana": return "masteredHiragana";
+    case "katakana": return "masteredKatakana";
+    case "kanji": return "masteredKanji";
+    case "vocab": return "masteredVocab";
+  }
+}
+
+function checkMasteryAchievements(state: UserProgress) {
+  const { unlockAchievement } = useAchievementStore.getState();
+
+  if (state.masteredHiragana.length >= 46) {
+    unlockAchievement("hiragana-master");
+  }
+  if (state.masteredKatakana.length >= 46) {
+    unlockAchievement("katakana-master");
+  }
+  if (state.masteredKanji.length >= 1) {
+    unlockAchievement("first-kanji");
+  }
+  if (state.masteredVocab.length >= 100) {
+    unlockAchievement("vocab-100");
+  }
+}
 
 export const useProgressStore = create<ProgressState>()(
   persist(
@@ -161,6 +201,49 @@ export const useProgressStore = create<ProgressState>()(
         });
       },
 
+      toggleMastered: (type: MasteryType, item: string) => {
+        const key = getMasteryKey(type);
+        const current = get()[key];
+        const alreadyMastered = current.includes(item);
+
+        let newList: string[];
+        if (alreadyMastered) {
+          newList = current.filter(i => i !== item);
+        } else {
+          newList = [...current, item];
+        }
+
+        set({ [key]: newList } as Partial<UserProgress>);
+
+        // Check achievements after updating
+        const updatedState = get();
+        checkMasteryAchievements(updatedState);
+
+        // Determine content type for the DB
+        const contentTypeMap: Record<MasteryType, string> = {
+          hiragana: "hiragana",
+          katakana: "katakana",
+          kanji: "kanji",
+          vocab: "vocabulary",
+        };
+
+        // Sync to DB
+        fetch("/api/user/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contentType: contentTypeMap[type],
+            contentId: item,
+            completed: !alreadyMastered,
+          }),
+        }).catch(err => console.error("Failed to sync mastery:", err));
+      },
+
+      isMastered: (type: MasteryType, item: string) => {
+        const key = getMasteryKey(type);
+        return get()[key].includes(item);
+      },
+
       syncFromDB: async () => {
         try {
           const res = await fetch("/api/user/sync");
@@ -173,6 +256,10 @@ export const useProgressStore = create<ProgressState>()(
                 xp: json.data.totalXp,
                 level: json.data.level,
                 completedPaths: json.data.completedPaths || state.completedPaths,
+                masteredHiragana: json.data.masteredHiragana || state.masteredHiragana,
+                masteredKatakana: json.data.masteredKatakana || state.masteredKatakana,
+                masteredKanji: json.data.masteredKanji || state.masteredKanji,
+                masteredVocab: json.data.masteredVocab || state.masteredVocab,
               }));
             }
           }

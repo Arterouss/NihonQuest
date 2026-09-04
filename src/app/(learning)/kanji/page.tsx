@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Search } from "lucide-react";
+import { X, Search, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { kanjiData, kanjiCountByLevel, type KanjiEntry } from "@/lib/kanjiData";
+import { useProgressStore } from "@/store/useProgressStore";
 
 const jlptLevels = ["N5", "N4", "N3", "N2", "N1"];
 
@@ -20,6 +21,7 @@ export default function KanjiPage() {
   const [activeLevel, setActiveLevel] = useState("N5");
   const [search, setSearch] = useState("");
   const [selectedKanji, setSelectedKanji] = useState<KanjiEntry | null>(null);
+  const store = useProgressStore();
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
@@ -96,7 +98,7 @@ export default function KanjiPage() {
         {[
           { label: `Total Standar ${activeLevel}`, value: (kanjiCountByLevel[activeLevel] ?? 0).toLocaleString(), color: c.text },
           { label: "Tersedia di App", value: filtered.length.toString(), color: "#4F46E5" },
-          { label: "Dikuasai", value: "0", color: "#D95F76" },
+          { label: "Dikuasai", value: store.masteredKanji.filter(k => filtered.some(f => f.char === k)).length.toString(), color: "#D95F76" },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-2xl border border-[#E7E5E4] p-4 text-center">
             <div className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</div>
@@ -119,18 +121,30 @@ export default function KanjiPage() {
 
       {/* Kanji Grid */}
       <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3">
-        {paginatedKanji.map((kanji) => (
-          <motion.button
-            key={kanji.char + kanji.jlpt}
-            whileHover={{ y: -3, scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setSelectedKanji(kanji)}
-            className="flex flex-col items-center justify-center p-4 gap-1.5 bg-white rounded-2xl border border-[#E7E5E4] hover:border-[#8B5CF6] hover:shadow-md transition-all aspect-square"
-          >
-            <span className="text-3xl font-jp font-bold text-[#1F2937]">{kanji.char}</span>
-            <span className="text-[10px] text-[#6B7280] text-center leading-tight line-clamp-2">{kanji.meaning}</span>
-          </motion.button>
-        ))}
+        {paginatedKanji.map((kanji) => {
+          const isMastered = store.masteredKanji.includes(kanji.char);
+          return (
+            <motion.button
+              key={kanji.char + kanji.jlpt}
+              whileHover={{ y: -3, scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setSelectedKanji(kanji)}
+              className={`flex flex-col items-center justify-center p-4 gap-1.5 bg-white rounded-2xl border hover:shadow-md transition-all aspect-square relative ${
+                isMastered
+                  ? "border-[#22C55E] ring-2 ring-[#22C55E] bg-[#F0FDF4]"
+                  : "border-[#E7E5E4] hover:border-[#8B5CF6]"
+              }`}
+            >
+              {isMastered && (
+                <div className="absolute top-1.5 right-1.5">
+                  <CheckCircle2 size={12} className="text-[#22C55E]" />
+                </div>
+              )}
+              <span className="text-3xl font-jp font-bold text-[#1F2937]">{kanji.char}</span>
+              <span className="text-[10px] text-[#6B7280] text-center leading-tight line-clamp-2">{kanji.meaning}</span>
+            </motion.button>
+          );
+        })}
       </div>
 
       {/* Pagination Controls */}
@@ -218,11 +232,24 @@ export default function KanjiPage() {
                   </span>
                 </div>
 
-                <div className="flex gap-2 mt-4">
-                  <Link href="/flashcards?type=kanji" className="flex-1 py-2.5 bg-[#8B5CF6] text-white rounded-xl text-sm font-semibold text-center">
+                {/* Mastery Toggle */}
+                <button
+                  onClick={() => store.toggleMastered("kanji", selectedKanji.char)}
+                  className={`w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+                    store.masteredKanji.includes(selectedKanji.char)
+                      ? "bg-[#22C55E] text-white hover:bg-[#16A34A]"
+                      : "bg-[#F0FDF4] text-[#22C55E] border-2 border-[#22C55E] hover:bg-[#DCFCE7]"
+                  }`}
+                >
+                  <CheckCircle2 size={16} />
+                  {store.masteredKanji.includes(selectedKanji.char) ? "Sudah Dikuasai ✓" : "Tandai Dikuasai"}
+                </button>
+
+                <div className="flex gap-2 mt-3">
+                  <Link href="/flashcards?type=kanji" className="flex-1 py-2.5 bg-[#8B5CF6] text-white rounded-xl text-sm font-semibold text-center hover:bg-[#7C3AED] transition-colors">
                     Flashcard
                   </Link>
-                  <Link href="/quiz?type=kanji" className="flex-1 py-2.5 border-2 border-[#8B5CF6] text-[#8B5CF6] rounded-xl text-sm font-semibold text-center">
+                  <Link href="/quiz?type=kanji" className="flex-1 py-2.5 border-2 border-[#8B5CF6] text-[#8B5CF6] rounded-xl text-sm font-semibold text-center hover:bg-[#EDE9FE] transition-colors">
                     Kuis
                   </Link>
                 </div>

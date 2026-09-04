@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Volume2 } from "lucide-react";
+import { X, Volume2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useProgressStore } from "@/store/useProgressStore";
 
 const katakanaData = {
   basic: [
@@ -50,9 +51,15 @@ const katakanaData = {
 
 type Category = keyof typeof katakanaData;
 
+const TOTAL_BASIC = katakanaData.basic.length; // 46
+
 export default function KatakanaPage() {
   const [activeCategory, setActiveCategory] = useState<Category>("basic");
   const [selectedChar, setSelectedChar] = useState<{ char: string; romaji: string } | null>(null);
+  const store = useProgressStore();
+
+  const masteredCount = store.masteredKatakana.length;
+  const progressPercent = Math.min((masteredCount / TOTAL_BASIC) * 100, 100);
 
   const categories = [
     { key: "basic" as Category, label: "Dasar", count: katakanaData.basic.length },
@@ -60,11 +67,21 @@ export default function KatakanaPage() {
     { key: "foreign" as Category, label: "Kata Asing", count: katakanaData.foreign.length },
   ];
 
-  const foreignExamples: Record<string, string> = {
-    "ア": "アイスクリーム (ice cream)",
-    "コ": "コーヒー (coffee)",
-    "テ": "テレビ (television)",
-    "パ": "パン (bread/pain)",
+  const foreignExamples: Record<string, { word: string; reading: string; meaning: string }[]> = {
+    "ア": [{ word: "アイスクリーム", reading: "aisukuriimu", meaning: "es krim" }],
+    "イ": [{ word: "インターネット", reading: "intaanetto", meaning: "internet" }],
+    "ウ": [{ word: "ウイスキー", reading: "uisukii", meaning: "wiski" }],
+    "エ": [{ word: "エレベーター", reading: "erebeetaa", meaning: "lift" }],
+    "オ": [{ word: "オレンジ", reading: "orenji", meaning: "jeruk" }],
+    "カ": [{ word: "カメラ", reading: "kamera", meaning: "kamera" }],
+    "コ": [{ word: "コーヒー", reading: "koohii", meaning: "kopi" }],
+    "テ": [{ word: "テレビ", reading: "terebi", meaning: "televisi" }],
+    "パ": [{ word: "パン", reading: "pan", meaning: "roti" }],
+    "ラ": [{ word: "ラーメン", reading: "raamen", meaning: "ramen" }],
+    "ビ": [{ word: "ビール", reading: "biiru", meaning: "bir" }],
+    "タ": [{ word: "タクシー", reading: "takushii", meaning: "taksi" }],
+    "ホ": [{ word: "ホテル", reading: "hoteru", meaning: "hotel" }],
+    "レ": [{ word: "レストラン", reading: "resutoran", meaning: "restoran" }],
   };
 
   return (
@@ -83,11 +100,19 @@ export default function KatakanaPage() {
         <div className="bg-white rounded-2xl border border-[#E7E5E4] p-5">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-semibold text-[#1F2937]">Progres Katakana</span>
-            <span className="text-sm font-bold text-[#4F46E5]">0 / 46</span>
+            <span className="text-sm font-bold text-[#4F46E5]">{masteredCount} / {TOTAL_BASIC}</span>
           </div>
           <div className="w-full bg-[#EEF2FF] rounded-full h-2.5">
-            <div className="h-2.5 rounded-full bg-[#4F46E5]" style={{ width: "0%" }} />
+            <motion.div
+              className="h-2.5 rounded-full bg-[#4F46E5]"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            />
           </div>
+          {masteredCount >= TOTAL_BASIC && (
+            <p className="text-xs text-[#22C55E] font-semibold mt-2">🎉 Selamat! Semua katakana dasar telah dikuasai!</p>
+          )}
           <div className="flex gap-3 mt-4">
             <Link href="/quiz?type=katakana" className="px-4 py-2 text-sm font-semibold bg-[#4F46E5] text-white rounded-xl hover:bg-[#3730A3] transition-colors">
               Mulai Kuis
@@ -138,8 +163,17 @@ export default function KatakanaPage() {
             whileHover={{ y: -3, scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => setSelectedChar(item)}
-            className="flex flex-col items-center justify-center p-4 gap-2 aspect-square bg-white rounded-2xl border border-[#E7E5E4] hover:border-[#4F46E5] hover:shadow-md transition-all"
+            className={`flex flex-col items-center justify-center p-4 gap-2 aspect-square bg-white rounded-2xl border transition-all relative ${
+              store.masteredKatakana.includes(item.char)
+                ? "border-[#22C55E] ring-2 ring-[#22C55E] bg-[#F0FDF4]"
+                : "border-[#E7E5E4] hover:border-[#4F46E5] hover:shadow-md"
+            }`}
           >
+            {store.masteredKatakana.includes(item.char) && (
+              <div className="absolute top-1.5 right-1.5">
+                <CheckCircle2 size={14} className="text-[#22C55E]" />
+              </div>
+            )}
             <span className="text-3xl font-jp font-bold text-[#1F2937]">{item.char}</span>
             <span className="text-xs font-medium text-[#4F46E5]">{item.romaji}</span>
           </motion.button>
@@ -169,7 +203,7 @@ export default function KatakanaPage() {
                   <X size={20} />
                 </button>
               </div>
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-4">
                 <span className="px-4 py-2 bg-[#EEF2FF] text-[#4F46E5] rounded-xl font-bold">{selectedChar.romaji}</span>
                 <button 
                   onClick={() => {
@@ -182,19 +216,46 @@ export default function KatakanaPage() {
                       alert("Browser Anda tidak mendukung fitur suara.");
                     }
                   }}
-                  className="p-2 rounded-xl bg-[#EEF2FF] text-[#4F46E5]"
+                  className="p-2 rounded-xl bg-[#EEF2FF] text-[#4F46E5] hover:bg-[#4F46E5] hover:text-white transition-all"
                 >
                   <Volume2 size={18} />
                 </button>
               </div>
-              <p className="text-sm text-[#6B7280]">
-                {foreignExamples[selectedChar.char] || "Karakter katakana untuk " + selectedChar.romaji}
-              </p>
-              <div className="mt-6 flex gap-2">
-                <Link href="/flashcards?type=katakana" className="flex-1 py-2.5 bg-[#4F46E5] text-white rounded-xl text-sm font-semibold text-center">
+
+              {/* Examples */}
+              <div className="mb-4">
+                <h4 className="text-sm font-bold text-[#6B7280] uppercase tracking-wider mb-3">Contoh Kata</h4>
+                <div className="space-y-2">
+                  {(foreignExamples[selectedChar.char] || [{ word: selectedChar.char + "...", reading: selectedChar.romaji, meaning: "Karakter katakana untuk " + selectedChar.romaji }]).map((e) => (
+                    <div key={e.word} className="flex items-center justify-between p-3 bg-[#FFF9F7] rounded-xl">
+                      <div>
+                        <span className="font-jp font-bold text-[#1F2937]">{e.word}</span>
+                        <span className="text-xs text-[#6B7280] ml-2">{e.reading}</span>
+                      </div>
+                      <span className="text-sm text-[#6B7280]">{e.meaning}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mastery Toggle */}
+              <button
+                onClick={() => store.toggleMastered("katakana", selectedChar.char)}
+                className={`w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+                  store.masteredKatakana.includes(selectedChar.char)
+                    ? "bg-[#22C55E] text-white hover:bg-[#16A34A]"
+                    : "bg-[#F0FDF4] text-[#22C55E] border-2 border-[#22C55E] hover:bg-[#DCFCE7]"
+                }`}
+              >
+                <CheckCircle2 size={16} />
+                {store.masteredKatakana.includes(selectedChar.char) ? "Sudah Dikuasai ✓" : "Tandai Dikuasai"}
+              </button>
+
+              <div className="mt-3 flex gap-2">
+                <Link href="/flashcards?type=katakana" className="flex-1 py-2.5 bg-[#4F46E5] text-white rounded-xl text-sm font-semibold text-center hover:bg-[#3730A3] transition-colors">
                   Flashcard
                 </Link>
-                <Link href="/quiz?type=katakana" className="flex-1 py-2.5 border-2 border-[#4F46E5] text-[#4F46E5] rounded-xl text-sm font-semibold text-center">
+                <Link href="/quiz?type=katakana" className="flex-1 py-2.5 border-2 border-[#4F46E5] text-[#4F46E5] rounded-xl text-sm font-semibold text-center hover:bg-[#EEF2FF] transition-colors">
                   Kuis
                 </Link>
               </div>

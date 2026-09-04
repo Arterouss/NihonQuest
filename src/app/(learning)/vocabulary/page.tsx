@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Volume2, Filter, ChevronDown } from "lucide-react";
+import { Search, X, Volume2, CheckCircle2 } from "lucide-react";
 
 import { vocabularyData } from "@/lib/vocabularyData";
+import { getExampleSentence } from "@/lib/exampleSentences";
+import { useProgressStore } from "@/store/useProgressStore";
 
 const vocabData = vocabularyData.map(v => ({
   jp: v.word,
@@ -14,7 +16,6 @@ const vocabData = vocabularyData.map(v => ({
   pos: v.type || "Vocabulary",
   jlpt: `N${v.level}`,
   category: "Semua", // Dataset baru belum punya kategori spesifik
-  ex: "Contoh kalimat belum tersedia",
 }));
 
 const categories = ["Semua"];
@@ -34,6 +35,7 @@ export default function VocabularyPage() {
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [activeJLPT, setActiveJLPT] = useState("Semua");
   const [selectedVocab, setSelectedVocab] = useState<typeof vocabData[0] | null>(null);
+  const store = useProgressStore();
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
@@ -48,6 +50,8 @@ export default function VocabularyPage() {
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginatedVocab = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
+  const masteredCount = store.masteredVocab.length;
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
@@ -60,6 +64,27 @@ export default function VocabularyPage() {
             <h1 className="text-2xl font-bold text-[#1F2937]">Kosakata</h1>
             <p className="text-[#6B7280] text-sm">語彙 — Perbendaharaan kata bahasa Jepang</p>
           </div>
+        </div>
+
+        {/* Mastery Progress */}
+        <div className="bg-white rounded-2xl border border-[#E7E5E4] p-5">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-semibold text-[#1F2937]">Kosakata Dikuasai</span>
+            <span className="text-sm font-bold text-[#22C55E]">{masteredCount} kata</span>
+          </div>
+          <div className="w-full bg-[#DCFCE7] rounded-full h-2.5">
+            <motion.div
+              className="h-2.5 rounded-full bg-[#22C55E]"
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min((masteredCount / 100) * 100, 100)}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            />
+          </div>
+          <p className="text-xs text-[#6B7280] mt-1.5">
+            {masteredCount >= 100
+              ? "🎉 Pencapaian '100 Kosakata' tercapai!"
+              : `${100 - masteredCount} kata lagi untuk pencapaian '100 Kosakata'`}
+          </p>
         </div>
       </motion.div>
 
@@ -115,32 +140,44 @@ export default function VocabularyPage() {
 
       {/* Vocab Cards */}
       <div className="grid sm:grid-cols-2 gap-3">
-        {paginatedVocab.map((vocab) => (
-          <motion.button
-            key={vocab.jp + vocab.jlpt + Math.random()}
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={() => setSelectedVocab(vocab)}
-            className="text-left bg-white rounded-2xl border border-[#E7E5E4] p-4 hover:border-[#22C55E] hover:shadow-md transition-all"
-          >
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <span className="text-2xl font-jp font-bold text-[#1F2937]">{vocab.jp}</span>
-                <span className="ml-2 text-sm text-[#D95F76] font-jp">{vocab.reading}</span>
+        {paginatedVocab.map((vocab, idx) => {
+          const isMastered = store.masteredVocab.includes(vocab.jp);
+          return (
+            <motion.button
+              key={vocab.jp + vocab.jlpt + idx}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={() => setSelectedVocab(vocab)}
+              className={`text-left bg-white rounded-2xl border p-4 hover:shadow-md transition-all relative ${
+                isMastered
+                  ? "border-[#22C55E] ring-1 ring-[#22C55E]/30 bg-[#F0FDF4]"
+                  : "border-[#E7E5E4] hover:border-[#22C55E]"
+              }`}
+            >
+              {isMastered && (
+                <div className="absolute top-3 right-3">
+                  <CheckCircle2 size={16} className="text-[#22C55E]" />
+                </div>
+              )}
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <span className="text-2xl font-jp font-bold text-[#1F2937]">{vocab.jp}</span>
+                  <span className="ml-2 text-sm text-[#D95F76] font-jp">{vocab.reading}</span>
+                </div>
+                <span
+                  className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: jlptColors[vocab.jlpt]?.bg, color: jlptColors[vocab.jlpt]?.text }}
+                >
+                  {vocab.jlpt}
+                </span>
               </div>
-              <span
-                className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0"
-                style={{ backgroundColor: jlptColors[vocab.jlpt]?.bg, color: jlptColors[vocab.jlpt]?.text }}
-              >
-                {vocab.jlpt}
-              </span>
-            </div>
-            <p className="font-semibold text-[#1F2937] text-sm mb-1">{vocab.meaning}</p>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-[#6B7280] bg-[#FFF9F7] px-2 py-0.5 rounded-lg line-clamp-1">{vocab.pos}</span>
-            </div>
-          </motion.button>
-        ))}
+              <p className="font-semibold text-[#1F2937] text-sm mb-1">{vocab.meaning}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[#6B7280] bg-[#FFF9F7] px-2 py-0.5 rounded-lg line-clamp-1">{vocab.pos}</span>
+              </div>
+            </motion.button>
+          );
+        })}
       </div>
 
       {/* Pagination Controls */}
@@ -180,7 +217,7 @@ export default function VocabularyPage() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl"
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-start mb-4">
@@ -206,10 +243,44 @@ export default function VocabularyPage() {
                   <p className="text-[#6B7280] text-sm">{selectedVocab.romaji}</p>
                 </div>
 
+                {/* Example Sentences */}
                 <div className="bg-[#EEF2FF] rounded-xl p-4">
-                  <p className="text-xs font-bold text-[#6B7280] mb-1">CONTOH KALIMAT</p>
-                  <p className="font-jp text-[#1F2937] font-bold">{selectedVocab.ex}</p>
+                  <p className="text-xs font-bold text-[#6B7280] mb-2">CONTOH KALIMAT</p>
+                  {getExampleSentence(selectedVocab.jp, selectedVocab.reading, selectedVocab.meaning).map((ex, i) => (
+                    <div key={i} className="space-y-1.5">
+                      <p className="font-jp text-[#1F2937] font-bold text-base leading-relaxed">{ex.ja}</p>
+                      <p className="text-[#4F46E5] text-sm italic">{ex.reading}</p>
+                      <p className="text-[#6B7280] text-sm">{ex.id}</p>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => {
+                      if ("speechSynthesis" in window) {
+                        window.speechSynthesis.cancel();
+                        const sentences = getExampleSentence(selectedVocab.jp, selectedVocab.reading, selectedVocab.meaning);
+                        const utterance = new SpeechSynthesisUtterance(sentences[0].ja);
+                        utterance.lang = "ja-JP";
+                        window.speechSynthesis.speak(utterance);
+                      }
+                    }}
+                    className="mt-3 flex items-center gap-1.5 text-xs text-[#4F46E5] font-semibold hover:underline"
+                  >
+                    <Volume2 size={14} /> Dengarkan kalimat
+                  </button>
                 </div>
+
+                {/* Mastery Toggle */}
+                <button
+                  onClick={() => store.toggleMastered("vocab", selectedVocab.jp)}
+                  className={`w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+                    store.masteredVocab.includes(selectedVocab.jp)
+                      ? "bg-[#22C55E] text-white hover:bg-[#16A34A]"
+                      : "bg-[#F0FDF4] text-[#22C55E] border-2 border-[#22C55E] hover:bg-[#DCFCE7]"
+                  }`}
+                >
+                  <CheckCircle2 size={16} />
+                  {store.masteredVocab.includes(selectedVocab.jp) ? "Sudah Dikuasai ✓" : "Tandai Dikuasai"}
+                </button>
 
                 <button 
                   onClick={() => {
@@ -222,7 +293,7 @@ export default function VocabularyPage() {
                       alert("Browser Anda tidak mendukung fitur suara (Speech Synthesis).");
                     }
                   }}
-                  className="w-full py-2.5 bg-[#22C55E] text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+                  className="w-full py-2.5 bg-[#22C55E] text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#16A34A] transition-colors"
                 >
                   <Volume2 size={16} /> Dengarkan Pengucapan
                 </button>

@@ -16,11 +16,31 @@ export async function GET() {
       where: { userId },
     });
 
-    // Fetch completed paths
-    const progress = await prisma.userProgress.findMany({
-      where: { userId, contentType: "jlpt-path", completed: true },
+    // Fetch all completed mastery records
+    const allProgress = await prisma.userProgress.findMany({
+      where: { userId, completed: true },
     });
-    const completedPaths = progress.map(p => p.contentId);
+
+    // Separate by content type
+    const completedPaths = allProgress
+      .filter(p => p.contentType === "jlpt-path")
+      .map(p => p.contentId);
+
+    const masteredHiragana = allProgress
+      .filter(p => p.contentType === "hiragana")
+      .map(p => p.contentId);
+
+    const masteredKatakana = allProgress
+      .filter(p => p.contentType === "katakana")
+      .map(p => p.contentId);
+
+    const masteredKanji = allProgress
+      .filter(p => p.contentType === "kanji")
+      .map(p => p.contentId);
+
+    const masteredVocab = allProgress
+      .filter(p => p.contentType === "vocabulary")
+      .map(p => p.contentId);
 
     // Fetch study sessions for weekly stats and skills
     const sessions = await prisma.studySession.findMany({
@@ -75,6 +95,10 @@ export async function GET() {
         completedPaths,
         weeklyXp,
         skillStats,
+        masteredHiragana,
+        masteredKatakana,
+        masteredKanji,
+        masteredVocab,
       }
     });
   } catch (error) {

@@ -1,174 +1,83 @@
-"use client";
+import { redirect } from "next/navigation";
+import { auth } from "../../../../auth";
+import ProfileClient from "./ProfileClient";
 
-import { motion } from "framer-motion";
-import { User, Zap, Flame, Trophy, Target, BookOpen, Calendar, Edit2, Camera } from "lucide-react";
-import Link from "next/link";
-import { useAchievementStore, ACHIEVEMENTS_LIST } from "@/store/useAchievementStore";
-
-const userStats = {
-  name: "Budi Santoso",
-  email: "budi@email.com",
-  jlptTarget: "N3",
-  level: 5,
-  xp: 1240,
-  streak: 7,
-  joinDate: "Januari 2024",
-  totalStudyDays: 32,
-  itemsLearned: 96,
-  quizAccuracy: 78,
+export const metadata = {
+  title: "Profil | NihonQuest",
 };
 
-export default function ProfilePage() {
-  const { unlockedIds } = useAchievementStore();
-  const unlockedAchievements = ACHIEVEMENTS_LIST.filter(a => unlockedIds.includes(a.id)).slice(0, 4);
+export default async function ProfilePage() {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
 
-  return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Profile Card */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-3xl border border-[#E7E5E4] overflow-hidden shadow-sm"
-      >
-        {/* Banner */}
-        <div className="h-32 sakura-gradient relative">
-          <div className="absolute inset-0 seigaiha-pattern opacity-20" />
-          <div className="absolute -bottom-12 left-6">
-            <div className="w-24 h-24 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center">
-              <User size={40} className="text-[#6B7280]" />
-            </div>
-          </div>
-          <button className="absolute top-4 right-4 p-2 bg-white/20 rounded-xl text-white hover:bg-white/30 transition-all">
-            <Camera size={16} />
-          </button>
-        </div>
+  // Fetch initial profile data from our API on the server
+  // Because it's a server component we can either use fetch with absolute URL 
+  // or fetch directly from the database to avoid network request
+  // Let's use fetch with absolute URL for simplicity, using headers for cookie/auth forwarding
+  // Actually, since we are in a server component, it's safer to query DB or just let Client fetch?
+  // But wait, Server Components can't do relative fetches without base URL.
+  // We can just query the DB directly here.
 
-        <div className="pt-14 pb-6 px-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-[#1F2937]">{userStats.name}</h1>
-              <p className="text-[#6B7280] text-sm">{userStats.email}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="px-3 py-1 bg-[#EEF2FF] text-[#4F46E5] text-sm font-bold rounded-full">
-                  Level {userStats.level}
-                </span>
-                <span className="px-3 py-1 bg-[#FCE7EC] text-[#D95F76] text-sm font-bold rounded-full">
-                  Target: {userStats.jlptTarget}
-                </span>
-              </div>
-            </div>
-            <button className="flex items-center gap-2 px-4 py-2 border border-[#E7E5E4] rounded-xl text-sm font-medium text-[#6B7280] hover:border-[#D95F76] hover:text-[#D95F76] transition-all">
-              <Edit2 size={14} /> Edit Profil
-            </button>
-          </div>
+  const { prisma } = await import("@/lib/prisma");
+  
+  const userId = session.user.id;
+  const user = await prisma.user.findUnique({
+    where: { id: userId! },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      jlptTarget: true,
+      createdAt: true,
+    },
+  });
 
-          {/* Stats Row */}
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { label: "XP Total", value: userStats.xp.toLocaleString(), icon: <Zap size={16} />, color: "#4F46E5" },
-              { label: "Streak", value: `${userStats.streak}d`, icon: <Flame size={16} />, color: "#D95F76" },
-              { label: "Item Belajar", value: userStats.itemsLearned, icon: <BookOpen size={16} />, color: "#22C55E" },
-              { label: "Akurasi", value: `${userStats.quizAccuracy}%`, icon: <Target size={16} />, color: "#F59E0B" },
-            ].map((s) => (
-              <div key={s.label} className="text-center bg-[#FFF9F7] rounded-2xl p-3">
-                <div className="flex justify-center mb-1" style={{ color: s.color }}>{s.icon}</div>
-                <div className="font-bold text-[#1F2937]">{s.value}</div>
-                <div className="text-xs text-[#6B7280]">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
+  if (!user) {
+    redirect("/login");
+  }
 
-      {/* XP Progress */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-white rounded-2xl border border-[#E7E5E4] p-6"
-      >
-        <h2 className="font-bold text-[#1F2937] mb-4">Level & XP</h2>
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-[#4F46E5] flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">{userStats.level}</span>
-          </div>
-          <div className="flex-1">
-            <div className="flex justify-between text-sm mb-2">
-              <span className="font-semibold text-[#1F2937]">Level {userStats.level}</span>
-              <span className="text-[#4F46E5] font-bold">{userStats.xp} / {userStats.level * 300} XP</span>
-            </div>
-            <div className="w-full bg-[#EEF2FF] rounded-full h-3">
-              <motion.div
-                className="h-3 rounded-full bg-[#4F46E5]"
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min((userStats.xp / (userStats.level * 300)) * 100, 100)}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-              />
-            </div>
-            <p className="text-xs text-[#6B7280] mt-1.5">
-              {userStats.level * 300 - userStats.xp} XP lagi untuk Level {userStats.level + 1}
-            </p>
-          </div>
-        </div>
-      </motion.div>
+  const streak = await prisma.learningStreak.findUnique({
+    where: { userId: userId! },
+  });
 
-      {/* Recent Achievements */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl border border-[#E7E5E4] p-6 lg:col-span-2"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-[#1F2937] flex items-center gap-2">
-            <Trophy size={18} className="text-[#F2B84B]" />
-            Pencapaian Terbaru
-          </h2>
-          <Link href="/achievements" className="text-xs font-semibold text-[#D95F76]">Lihat Semua</Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {unlockedAchievements.length > 0 ? (
-            unlockedAchievements.map((a, i) => (
-              <div key={i} className="flex flex-col items-center justify-center p-4 rounded-xl border border-[#E7E5E4] bg-gray-50 text-center">
-                <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-2xl mb-2"
-                  style={{ backgroundColor: a.color + "20" }}
-                >
-                  {a.icon}
-                </div>
-                <span className="text-xs font-bold text-[#1F2937] leading-tight">{a.name}</span>
-              </div>
-            ))
-          ) : (
-            <p className="text-sm text-gray-400 col-span-4 text-center py-4">Belum ada achievement yang terbuka.</p>
-          )}
-        </div>
-      </motion.div>
+  const sessions = await prisma.studySession.findMany({
+    where: { userId: userId! },
+    select: { createdAt: true },
+  });
 
-      {/* Learning Info */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-white rounded-2xl border border-[#E7E5E4] p-6"
-      >
-        <h2 className="font-bold text-[#1F2937] mb-4">Informasi Belajar</h2>
-        <div className="space-y-3">
-          {[
-            { label: "Bergabung sejak", value: userStats.joinDate, icon: <Calendar size={16} /> },
-            { label: "Target JLPT", value: userStats.jlptTarget, icon: <Target size={16} /> },
-            { label: "Hari Belajar", value: `${userStats.totalStudyDays} hari`, icon: <BookOpen size={16} /> },
-            { label: "Akurasi Kuis", value: `${userStats.quizAccuracy}%`, icon: <Trophy size={16} /> },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between py-2 border-b border-[#F3F4F6] last:border-0">
-              <div className="flex items-center gap-2 text-[#6B7280]">
-                {item.icon}
-                <span className="text-sm">{item.label}</span>
-              </div>
-              <span className="font-semibold text-[#1F2937] text-sm">{item.value}</span>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-    </div>
+  const studyDays = new Set(
+    sessions.map(s => s.createdAt.toISOString().split("T")[0])
   );
+
+  const quizAttempts = await prisma.quizAttempt.findMany({
+    where: { userId: userId! },
+    select: { correct: true },
+  });
+
+  const totalQuizzes = quizAttempts.length;
+  const correctQuizzes = quizAttempts.filter(a => a.correct).length;
+  const quizAccuracy = totalQuizzes > 0 ? Math.round((correctQuizzes / totalQuizzes) * 100) : 0;
+
+  const masteredItems = await prisma.userProgress.count({
+    where: { userId: userId!, completed: true },
+  });
+
+  const initialData = {
+    name: user.name || "Pelajar",
+    email: user.email || "",
+    jlptTarget: user.jlptTarget || "N5",
+    joinDate: user.createdAt.toISOString(),
+    totalXp: streak?.totalXp || 0,
+    level: streak?.level || 1,
+    streak: streak?.currentStreak || 0,
+    totalStudyDays: studyDays.size,
+    totalSessions: sessions.length,
+    quizAccuracy,
+    masteredItems,
+  };
+
+  return <ProfileClient initialData={initialData} />;
 }

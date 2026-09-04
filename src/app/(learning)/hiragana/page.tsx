@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, ChevronRight, ChevronLeft, X, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useProgressStore } from "@/store/useProgressStore";
 
 const hiraganaData = {
   basic: [
@@ -51,25 +52,43 @@ const hiraganaData = {
 
 type Category = keyof typeof hiraganaData;
 
-function KanaCard({ char, romaji, onClick }: { char: string; romaji: string; onClick: () => void }) {
+const TOTAL_BASIC = hiraganaData.basic.length; // 46
+
+function KanaCard({ char, romaji, onClick, mastered }: { char: string; romaji: string; onClick: () => void; mastered: boolean }) {
   return (
     <motion.button
       whileHover={{ y: -3, scale: 1.02 }}
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className="kana-card flex flex-col items-center justify-center p-4 gap-2 aspect-square"
+      className={`kana-card flex flex-col items-center justify-center p-4 gap-2 aspect-square relative ${mastered ? "ring-2 ring-[#22C55E] bg-[#F0FDF4]" : ""}`}
     >
+      {mastered && (
+        <div className="absolute top-1.5 right-1.5">
+          <CheckCircle2 size={14} className="text-[#22C55E]" />
+        </div>
+      )}
       <span className="text-3xl font-jp font-bold text-[#1F2937]">{char}</span>
       <span className="text-xs font-medium text-[#D95F76]">{romaji}</span>
     </motion.button>
   );
 }
 
-function CharModal({ char, romaji, onClose }: { char: string; romaji: string; onClose: () => void }) {
+function CharModal({ char, romaji, onClose, mastered, onToggleMastery }: { char: string; romaji: string; onClose: () => void; mastered: boolean; onToggleMastery: () => void }) {
   const examples: Record<string, { word: string; reading: string; meaning: string }[]> = {
     "あ": [{ word: "あさ", reading: "asa", meaning: "pagi" }, { word: "あたま", reading: "atama", meaning: "kepala" }],
+    "い": [{ word: "いぬ", reading: "inu", meaning: "anjing" }, { word: "いえ", reading: "ie", meaning: "rumah" }],
+    "う": [{ word: "うみ", reading: "umi", meaning: "laut" }, { word: "うた", reading: "uta", meaning: "lagu" }],
+    "え": [{ word: "えき", reading: "eki", meaning: "stasiun" }, { word: "えんぴつ", reading: "enpitsu", meaning: "pensil" }],
+    "お": [{ word: "おかね", reading: "okane", meaning: "uang" }, { word: "おちゃ", reading: "ocha", meaning: "teh" }],
     "か": [{ word: "かさ", reading: "kasa", meaning: "payung" }, { word: "かぜ", reading: "kaze", meaning: "angin" }],
     "さ": [{ word: "さかな", reading: "sakana", meaning: "ikan" }, { word: "さくら", reading: "sakura", meaning: "bunga sakura" }],
+    "た": [{ word: "たべる", reading: "taberu", meaning: "makan" }, { word: "たまご", reading: "tamago", meaning: "telur" }],
+    "な": [{ word: "なまえ", reading: "namae", meaning: "nama" }, { word: "なつ", reading: "natsu", meaning: "musim panas" }],
+    "は": [{ word: "はな", reading: "hana", meaning: "bunga" }, { word: "はし", reading: "hashi", meaning: "sumpit" }],
+    "ま": [{ word: "まど", reading: "mado", meaning: "jendela" }, { word: "まち", reading: "machi", meaning: "kota" }],
+    "や": [{ word: "やま", reading: "yama", meaning: "gunung" }, { word: "やさい", reading: "yasai", meaning: "sayuran" }],
+    "ら": [{ word: "らいねん", reading: "rainen", meaning: "tahun depan" }],
+    "わ": [{ word: "わたし", reading: "watashi", meaning: "saya" }],
   };
   const ex = examples[char] || [{ word: char + "...", reading: romaji + "...", meaning: "contoh kata" }];
 
@@ -131,7 +150,20 @@ function CharModal({ char, romaji, onClose }: { char: string; romaji: string; on
           </div>
         </div>
 
-        <div className="mt-6 flex gap-2">
+        {/* Mastery Toggle */}
+        <button
+          onClick={onToggleMastery}
+          className={`w-full mt-5 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
+            mastered
+              ? "bg-[#22C55E] text-white hover:bg-[#16A34A]"
+              : "bg-[#F0FDF4] text-[#22C55E] border-2 border-[#22C55E] hover:bg-[#DCFCE7]"
+          }`}
+        >
+          <CheckCircle2 size={16} />
+          {mastered ? "Sudah Dikuasai ✓" : "Tandai Dikuasai"}
+        </button>
+
+        <div className="mt-3 flex gap-2">
           <Link
             href="/flashcards"
             className="flex-1 py-2.5 bg-[#D95F76] text-white rounded-xl text-sm font-semibold text-center hover:bg-[#B83D58] transition-colors"
@@ -153,6 +185,10 @@ function CharModal({ char, romaji, onClose }: { char: string; romaji: string; on
 export default function HiraganaPage() {
   const [activeCategory, setActiveCategory] = useState<Category>("basic");
   const [selectedChar, setSelectedChar] = useState<{ char: string; romaji: string } | null>(null);
+  const store = useProgressStore();
+
+  const masteredCount = store.masteredHiragana.length;
+  const progressPercent = Math.min((masteredCount / TOTAL_BASIC) * 100, 100);
 
   const categories: { key: Category; label: string; count: number }[] = [
     { key: "basic", label: "Dasar", count: hiraganaData.basic.length },
@@ -178,11 +214,19 @@ export default function HiraganaPage() {
         <div className="bg-white rounded-2xl border border-[#E7E5E4] p-5 mt-4">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-semibold text-[#1F2937]">Progres Hiragana</span>
-            <span className="text-sm font-bold text-[#D95F76]">0 / 46</span>
+            <span className="text-sm font-bold text-[#D95F76]">{masteredCount} / {TOTAL_BASIC}</span>
           </div>
           <div className="w-full bg-[#FCE7EC] rounded-full h-2.5">
-            <div className="h-2.5 rounded-full sakura-gradient" style={{ width: "0%" }} />
+            <motion.div
+              className="h-2.5 rounded-full sakura-gradient"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            />
           </div>
+          {masteredCount >= TOTAL_BASIC && (
+            <p className="text-xs text-[#22C55E] font-semibold mt-2">🎉 Selamat! Semua hiragana dasar telah dikuasai!</p>
+          )}
           <div className="flex gap-3 mt-4">
             <Link href="/quiz?type=hiragana" className="px-4 py-2 text-sm font-semibold bg-[#D95F76] text-white rounded-xl hover:bg-[#B83D58] transition-colors">
               Mulai Kuis
@@ -223,6 +267,7 @@ export default function HiraganaPage() {
             key={item.char}
             char={item.char}
             romaji={item.romaji}
+            mastered={store.masteredHiragana.includes(item.char)}
             onClick={() => setSelectedChar(item)}
           />
         ))}
@@ -234,6 +279,8 @@ export default function HiraganaPage() {
           <CharModal
             char={selectedChar.char}
             romaji={selectedChar.romaji}
+            mastered={store.masteredHiragana.includes(selectedChar.char)}
+            onToggleMastery={() => store.toggleMastered("hiragana", selectedChar.char)}
             onClose={() => setSelectedChar(null)}
           />
         )}
