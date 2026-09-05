@@ -75,7 +75,7 @@ function buildQuizQuestions(type: QuizType, level: Level, count = 15): Question[
 
   if (type === "grammar" || type === "mixed") {
     // grammar uses field 'jlpt' and 'examples'
-    const filtered = level === "all" ? grammarData : grammarData.filter(g => g.jlpt === level);
+    const filtered = level === "all" ? grammarData : grammarData.filter(g => g.level === level);
     const pool = shuffle(filtered).slice(0, type === "mixed" ? Math.ceil(count / 3) : count);
     const allMeanings = [...new Set(grammarData.map(g => g.meaning))].filter(Boolean);
 
@@ -83,10 +83,10 @@ function buildQuizQuestions(type: QuizType, level: Level, count = 15): Question[
       const wrongOpts = getWrongOptions(allMeanings, g.meaning);
       const opts = shuffle([g.meaning, ...wrongOpts]);
       questions.push({
-        question: `Pola tata bahasa 「${g.pattern}」 berarti apa?`,
+        question: `Pola tata bahasa 「${g.title}」 berarti apa?`,
         options: opts,
         correct: opts.indexOf(g.meaning),
-        explanation: `${g.pattern} = "${g.meaning}". Contoh: ${g.examples?.[0]?.jp || "-"}`,
+        explanation: `${g.title} = "${g.meaning}". Contoh: ${g.examples?.[0]?.ja || "-"}`,
       });
     }
   }

@@ -62,12 +62,12 @@ function buildDeck(type: DeckType, level: Level, count = 20): FlashCard[] {
     }));
   }
   // grammar: uses field 'jlpt' and 'examples'
-  const filtered = level === "all" ? grammarData : grammarData.filter(g => g.jlpt === level);
+  const filtered = level === "all" ? grammarData : grammarData.filter(g => g.level === level);
   return shuffle(filtered).slice(0, count).map(g => ({
-    front: g.pattern,
+    front: g.title,
     back: g.meaning,
     meaning: g.explanation?.slice(0, 80) + "..." || "",
-    romaji: g.examples?.[0]?.jp || "",
+    romaji: g.examples?.[0]?.ja || "",
     type: "grammar" as DeckType,
   }));
 }

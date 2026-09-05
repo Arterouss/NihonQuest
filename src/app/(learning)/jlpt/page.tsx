@@ -171,7 +171,7 @@ export default function JLPTPage() {
               { label: "Tata Bahasa", icon: <Layers size={18} />, href: `/grammar?jlpt=${selected.level}`, desc: `${selected.grammar}+ pola` },
               { label: "Membaca", icon: <FileText size={18} />, href: `/reading?jlpt=${selected.level}`, desc: "Teks & pertanyaan" },
               { label: "Mendengarkan", icon: <Headphones size={18} />, href: `/listening?jlpt=${selected.level}`, desc: "Audio latihan" },
-              { label: "Ujian Latihan", icon: <Target size={18} />, href: `/jlpt/${selected.level.toLowerCase()}/mock`, desc: "Simulasi ujian JLPT" },
+              { label: "BOSS FIGHT", icon: <Target size={18} className="text-red-500" />, href: `/jlpt/simulation`, desc: "Simulasi Ujian JLPT (15 Menit)" },
             ].map((section) => (
               <Link
                 key={section.label}

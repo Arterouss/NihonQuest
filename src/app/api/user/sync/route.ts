@@ -42,6 +42,10 @@ export async function GET() {
       .filter(p => p.contentType === "vocabulary")
       .map(p => p.contentId);
 
+    const masteredGrammar = allProgress
+      .filter(p => p.contentType === "grammar")
+      .map(p => p.contentId);
+
     // Fetch study sessions for weekly stats and skills
     const sessions = await prisma.studySession.findMany({
       where: { userId },
@@ -99,6 +103,7 @@ export async function GET() {
         masteredKatakana,
         masteredKanji,
         masteredVocab,
+        masteredGrammar,
       }
     });
   } catch (error) {

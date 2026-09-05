@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy } from "lucide-react";
 import { useAchievementStore } from "@/store/useAchievementStore";
 import { useProgressStore } from "@/store/useProgressStore"; // just to show XP
+import confetti from "canvas-confetti";
 
 export default function AchievementToast() {
   const { recentUnlock, clearRecentUnlock } = useAchievementStore();
@@ -19,6 +20,31 @@ export default function AchievementToast() {
         audio.volume = 0.5;
         audio.play().catch(() => {}); // ignore error if browser blocks auto-play
       } catch (e) {}
+
+      // Trigger confetti
+      const end = Date.now() + 2 * 1000;
+      const colors = ['#D95F76', '#4F46E5', '#F59E0B', '#22C55E'];
+
+      (function frame() {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: colors
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: colors
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
 
       const timer = setTimeout(() => {
         clearRecentUnlock();

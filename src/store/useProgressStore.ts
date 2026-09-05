@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useAchievementStore } from "./useAchievementStore";
 
-export type MasteryType = "hiragana" | "katakana" | "kanji" | "vocab";
+export type MasteryType = "hiragana" | "katakana" | "kanji" | "vocab" | "grammar";
 
 export interface UserProgress {
   name: string;
@@ -22,6 +22,7 @@ export interface UserProgress {
   masteredKatakana: string[];
   masteredKanji: string[];
   masteredVocab: string[];
+  masteredGrammar: string[];
 }
 
 interface ProgressState extends UserProgress {
@@ -60,14 +61,16 @@ const initialState: UserProgress = {
   masteredKatakana: [],
   masteredKanji: [],
   masteredVocab: [],
+  masteredGrammar: [],
 };
 
-function getMasteryKey(type: MasteryType): keyof Pick<UserProgress, "masteredHiragana" | "masteredKatakana" | "masteredKanji" | "masteredVocab"> {
+function getMasteryKey(type: MasteryType): keyof Pick<UserProgress, "masteredHiragana" | "masteredKatakana" | "masteredKanji" | "masteredVocab" | "masteredGrammar"> {
   switch (type) {
     case "hiragana": return "masteredHiragana";
     case "katakana": return "masteredKatakana";
     case "kanji": return "masteredKanji";
     case "vocab": return "masteredVocab";
+    case "grammar": return "masteredGrammar";
   }
 }
 
@@ -225,6 +228,7 @@ export const useProgressStore = create<ProgressState>()(
           katakana: "katakana",
           kanji: "kanji",
           vocab: "vocabulary",
+          grammar: "grammar",
         };
 
         // Sync to DB
@@ -260,6 +264,7 @@ export const useProgressStore = create<ProgressState>()(
                 masteredKatakana: json.data.masteredKatakana || state.masteredKatakana,
                 masteredKanji: json.data.masteredKanji || state.masteredKanji,
                 masteredVocab: json.data.masteredVocab || state.masteredVocab,
+                masteredGrammar: json.data.masteredGrammar || state.masteredGrammar,
               }));
             }
           }
