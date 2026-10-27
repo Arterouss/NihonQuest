@@ -10,7 +10,7 @@ import {
   Layers, Brain, MessageCircle, Headphones, FileText,
   Zap, Target, Trophy, User, LogOut, Menu, X,
   ChevronRight, Flame, BarChart2, Map, Search,
-  Calendar, Mic, PenLine, Music, BookHeart,
+  Calendar, Mic, PenLine, Music, BookHeart, GraduationCap, ScrollText,
 } from "lucide-react";
 
 import AchievementToast from "@/components/AchievementToast";
@@ -26,6 +26,7 @@ const navItems = [
   { href: "/grammar", icon: <AlignJustify size={18} />, label: "Tata Bahasa" },
   { href: "/pitch-accent", icon: <Music size={18} />, label: "Pitch Accent" },
   { href: "/keigo", icon: <BookHeart size={18} />, label: "Keigo & Budaya" },
+  { href: "/renshu", icon: <span className="font-jp font-bold text-sm">練</span>, label: "Renshu" },
   { href: "/conversation", icon: <MessageCircle size={18} />, label: "Percakapan" },
   { type: "divider", label: "LATIHAN" },
   { href: "/speaking", icon: <Mic size={18} />, label: "Latihan Bicara" },
@@ -40,6 +41,7 @@ const navItems = [
   { href: "/daily-challenge", icon: <Calendar size={18} />, label: "Tantangan Harian" },
   { href: "/progress", icon: <BarChart2 size={18} />, label: "Kemajuan" },
   { href: "/achievements", icon: <Trophy size={18} />, label: "Pencapaian" },
+  { href: "/certificate", icon: <GraduationCap size={18} />, label: "Sertifikat" },
 ];
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {

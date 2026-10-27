@@ -55,8 +55,8 @@ export default function WritingPage() {
     const ctx = canvasRef.current?.getContext("2d");
     if (ctx) {
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
-      ctx.fillStyle = "#1F2937";
+      ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "#FFFFFF";
       ctx.fill();
     }
   };
@@ -70,8 +70,8 @@ export default function WritingPage() {
     ctx.beginPath();
     ctx.moveTo(lastPos.current.x, lastPos.current.y);
     ctx.lineTo(pos.x, pos.y);
-    ctx.strokeStyle = "#1F2937";
-    ctx.lineWidth = 5;
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 7;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.stroke();
@@ -122,54 +122,62 @@ export default function WritingPage() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {/* Target character */}
+      <div className="grid grid-cols-1 gap-4">
+        {/* Target character info */}
         <motion.div
           key={currentIndex}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl border border-[#E7E5E4] p-6 text-center shadow-sm"
+          className="bg-white rounded-2xl border border-[#E7E5E4] p-4 flex items-center gap-6 shadow-sm"
         >
-          <p className="text-xs text-[#9CA3AF] font-semibold mb-2">HURUF TARGET</p>
-          <p className="font-jp text-8xl font-bold text-[#1F2937] mb-3 leading-none">{char.char}</p>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-[#374151]">{char.reading}</p>
-            <p className="text-xs text-[#6B7280]">{char.meaning}</p>
+          <div className="flex-shrink-0 text-center">
+            <p className="font-jp text-8xl font-bold text-[#1F2937] leading-none">{char.char}</p>
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-[#9CA3AF] font-semibold mb-1">HURUF TARGET</p>
+            <p className="text-base font-semibold text-[#374151]">{char.reading}</p>
+            <p className="text-sm text-[#6B7280]">{char.meaning}</p>
             <div className="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-[#F3F4F6] rounded-full">
               <PenLine size={12} className="text-indigo-500" />
               <span className="text-xs font-bold text-[#374151]">{char.strokes} coretan</span>
             </div>
+            <div className="mt-2">
+              <button onClick={() => setShowHint(!showHint)} className="flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 font-semibold">
+                <Info size={12} /> {showHint ? "Sembunyikan" : "Tampilkan Petunjuk"}
+              </button>
+              {showHint && (
+                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-2 p-2 bg-indigo-50 rounded-xl">
+                  <p className="text-xs text-indigo-700">{char.hint}</p>
+                </motion.div>
+              )}
+            </div>
           </div>
-
-          {/* Hint */}
-          <button onClick={() => setShowHint(!showHint)} className="mt-3 flex items-center gap-1 mx-auto text-xs text-indigo-500 hover:text-indigo-700 font-semibold">
-            <Info size={12} /> {showHint ? "Sembunyikan" : "Tampilkan Petunjuk"}
-          </button>
-          {showHint && (
-            <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="mt-2 p-3 bg-indigo-50 rounded-xl">
-              <p className="text-xs text-indigo-700">{char.hint}</p>
-            </motion.div>
-          )}
         </motion.div>
 
-        {/* Canvas area */}
-        <div className="bg-white rounded-3xl border-2 border-dashed border-[#E7E5E4] overflow-hidden shadow-sm relative" style={{ aspectRatio: "1/1" }}>
-          <p className="absolute top-3 left-0 right-0 text-center text-xs text-[#9CA3AF] font-semibold z-10">TULIS DI SINI</p>
+        {/* Canvas area — full width, tall */}
+        <div
+          className="rounded-3xl overflow-hidden shadow-lg relative"
+          style={{ background: "#111827", minHeight: "480px" }}
+        >
+          <p className="absolute top-4 left-0 right-0 text-center text-xs text-gray-400 font-semibold z-10 tracking-widest uppercase">Tulis di sini</p>
+
           {/* Grid guide lines */}
-          <div className="absolute inset-0 pointer-events-none" style={{
-            backgroundImage: "linear-gradient(#E7E5E4 1px, transparent 1px), linear-gradient(90deg, #E7E5E4 1px, transparent 1px)",
+          <div className="absolute inset-0 pointer-events-none z-0" style={{
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
             backgroundSize: "25% 25%"
           }} />
-          <div className="absolute inset-0 border-b border-r border-[#E7E5E4] pointer-events-none" style={{
-            backgroundImage: "linear-gradient(#F3A0B0 1px, transparent 1px), linear-gradient(90deg, #F3A0B0 1px, transparent 1px)",
+          {/* Center crosshair */}
+          <div className="absolute inset-0 pointer-events-none z-0" style={{
+            backgroundImage: "linear-gradient(rgba(99,102,241,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.25) 1px, transparent 1px)",
             backgroundSize: "100% 100%",
             backgroundPosition: "50% 50%"
           }} />
           <canvas
             ref={canvasRef}
-            width={400}
-            height={400}
-            className="w-full h-full touch-none cursor-crosshair"
+            width={800}
+            height={600}
+            className="w-full touch-none cursor-crosshair relative z-10"
+            style={{ display: "block" }}
             onMouseDown={startDraw}
             onMouseMove={draw}
             onMouseUp={stopDraw}
