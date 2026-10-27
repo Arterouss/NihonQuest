@@ -10,7 +10,7 @@ import {
   Layers, Brain, MessageCircle, Headphones, FileText,
   Zap, Target, Trophy, User, LogOut, Menu, X,
   ChevronRight, Flame, BarChart2, Map, Search,
-  Calendar, Mic, PenLine, Music, BookHeart, GraduationCap, ScrollText,
+  Calendar, Mic, PenLine, Music, BookHeart, GraduationCap,
 } from "lucide-react";
 
 import AchievementToast from "@/components/AchievementToast";
@@ -26,7 +26,7 @@ const navItems = [
   { href: "/grammar", icon: <AlignJustify size={18} />, label: "Tata Bahasa" },
   { href: "/pitch-accent", icon: <Music size={18} />, label: "Pitch Accent" },
   { href: "/keigo", icon: <BookHeart size={18} />, label: "Keigo & Budaya" },
-  { href: "/renshu", icon: <span className="font-jp font-bold text-sm">練</span>, label: "Renshu" },
+  { href: "/renshu", icon: <span className="font-jp font-bold text-sm">道</span>, label: "Dojo (道場)" },
   { href: "/conversation", icon: <MessageCircle size={18} />, label: "Percakapan" },
   { type: "divider", label: "LATIHAN" },
   { href: "/speaking", icon: <Mic size={18} />, label: "Latihan Bicara" },
