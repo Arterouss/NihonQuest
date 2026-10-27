@@ -23,7 +23,7 @@ export interface DojoVocab {
   reading: string;
   romaji: string;
   meaning: string;
-  level: "N5" | "N4" | "N3";
+  level: "N5" | "N4" | "N3" | "N2" | "N1";
   partOfSpeech: string;
   exampleJp: string;
   exampleId: string;
@@ -92,6 +92,9 @@ export interface ChatMessage {
 // Master Vocabulary Dataset (N5 - N3)
 // ------------------------------------------
 const masterVocab: DojoVocab[] = [
+  // ==========================================
+  // JLPT N5 (Dasar & Sehari-hari)
+  // ==========================================
   { id: "v1", word: "食べる", reading: "たべる", romaji: "taberu", meaning: "makan", level: "N5", partOfSpeech: "Kata Kerja (Ichidan)", exampleJp: "毎朝パンを食べます。", exampleId: "Saya makan roti setiap pagi." },
   { id: "v2", word: "飲む", reading: "のむ", romaji: "nomu", meaning: "minum", level: "N5", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "冷たい水を飲みました。", exampleId: "Saya minum air dingin." },
   { id: "v3", word: "行く", reading: "いく", romaji: "iku", meaning: "pergi", level: "N5", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "明日東京へ行きます。", exampleId: "Besok saya pergi ke Tokyo." },
@@ -101,22 +104,103 @@ const masterVocab: DojoVocab[] = [
   { id: "v7", word: "話す", reading: "はなす", romaji: "hanasu", meaning: "berbicara", level: "N5", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "日本語で話しましょう。", exampleId: "Mari berbicara dalam bahasa Jepang." },
   { id: "v8", word: "読む", reading: "よむ", romaji: "yomu", meaning: "membaca", level: "N5", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "図書館で本を読みます。", exampleId: "Saya membaca buku di perpustakaan." },
   { id: "v9", word: "書く", reading: "かく", romaji: "kaku", meaning: "menulis", level: "N5", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "漢字をきれいに書きます。", exampleId: "Saya menulis kanji dengan rapi." },
-  { id: "v10", word: "大きい", reading: "おおきい", romaji: "ookii", meaning: "besar", level: "N5", partOfSpeech: "Kata Sifat -i", exampleJp: "富士山はとても大きいです。", exampleId: "Gunung Fuji sangat besar." },
-  { id: "v11", word: "小さい", reading: "ちいさい", romaji: "chiisai", meaning: "kecil", level: "N5", partOfSpeech: "Kata Sifat -i", exampleJp: "この鞄は小さくて軽いです。", exampleId: "Tas ini kecil dan ringan." },
-  { id: "v12", word: "新しい", reading: "あたらしい", romaji: "atarashii", meaning: "baru", level: "N5", partOfSpeech: "Kata Sifat -i", exampleJp: "新しい靴を買いました。", exampleId: "Saya membeli sepatu baru." },
-  { id: "v13", word: "学校", reading: "がっこう", romaji: "gakkou", meaning: "sekolah", level: "N5", partOfSpeech: "Kata Benda", exampleJp: "学校まで歩いて行きます。", exampleId: "Saya berjalan kaki ke sekolah." },
-  { id: "v14", word: "先生", reading: "せんせい", romaji: "sensei", meaning: "guru / dokter", level: "N5", partOfSpeech: "Kata Benda", exampleJp: "先生に質問をしました。", exampleId: "Saya bertanya kepada guru." },
-  { id: "v15", word: "時間", reading: "じかん", romaji: "jikan", meaning: "waktu / jam", level: "N5", partOfSpeech: "Kata Benda", exampleJp: "今は時間がありません。", exampleId: "Sekarang saya tidak punya waktu." },
-  // N4
-  { id: "v16", word: "経験", reading: "けいけん", romaji: "keiken", meaning: "pengalaman", level: "N4", partOfSpeech: "Kata Benda / Suru", exampleJp: "日本での留学は良い経験です。", exampleId: "Kuliah di Jepang adalah pengalaman berharga." },
-  { id: "v17", word: "生活", reading: "せいかつ", romaji: "seikatsu", meaning: "kehidupan sehari-hari", level: "N4", partOfSpeech: "Kata Benda / Suru", exampleJp: "東京の生活に慣れました。", exampleId: "Saya sudah terbiasa dengan kehidupan di Tokyo." },
-  { id: "v18", word: "準備", reading: "じゅんび", romaji: "junbi", meaning: "persiapan", level: "N4", partOfSpeech: "Kata Benda / Suru", exampleJp: "旅行の準備をします。", exampleId: "Saya mempersiapkan untuk perjalanan." },
-  { id: "v19", word: "集める", reading: "あつめる", romaji: "atsumeru", meaning: "mengumpulkan", level: "N4", partOfSpeech: "Kata Kerja (Ichidan)", exampleJp: "好きなアニメグッズを集める。", exampleId: "Mengumpulkan merchandise anime favorit." },
-  { id: "v20", word: "残る", reading: "のこる", romaji: "nokoru", meaning: "tersisa / tertinggal", level: "N4", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "まだ時間が少し残っています。", exampleId: "Masih tersisa sedikit waktu." },
-  // N3
-  { id: "v21", word: "影響", reading: "えいきょう", romaji: "eikyou", meaning: "pengaruh / dampak", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "天候の影響で電車が遅れた。", exampleId: "Kereta terlambat karena pengaruh cuaca buruk." },
-  { id: "v22", word: "判断", reading: "はんだん", romaji: "handan", meaning: "penilaian / pertimbangan", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "冷静に状況を判断する。", exampleId: "Menilai situasi dengan kepala dingin." },
-  { id: "v23", word: "環境", reading: "かんきょう", romaji: "kankyou", meaning: "lingkungan", level: "N3", partOfSpeech: "Kata Benda", exampleJp: "自然環境を守ることが大切だ。", exampleId: "Penting untuk menjaga lingkungan alam." },
+  { id: "v10", word: "買う", reading: "かう", romaji: "kau", meaning: "membeli", level: "N5", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "新しい靴を買いました。", exampleId: "Saya membeli sepatu baru." },
+  { id: "v11", word: "待つ", reading: "まつ", romaji: "matsu", meaning: "menunggu", level: "N5", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "駅の前で友達を待ちます。", exampleId: "Saya menunggu teman di depan stasiun." },
+  { id: "v12", word: "帰る", reading: "かえる", romaji: "kaeru", meaning: "pulang", level: "N5", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "午後6時に家へ帰ります。", exampleId: "Saya pulang ke rumah pada jam 6 sore." },
+  { id: "v13", word: "会う", reading: "あう", romaji: "au", meaning: "bertemu", level: "N5", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "明日先生に会います。", exampleId: "Besok saya akan bertemu guru." },
+  { id: "v14", word: "勉強する", reading: "べんきょうする", romaji: "benkyou suru", meaning: "belajar", level: "N5", partOfSpeech: "Kata Kerja (Suru)", exampleJp: "毎日日本語を勉強します。", exampleId: "Saya belajar bahasa Jepang setiap hari." },
+  { id: "v15", word: "働く", reading: "はたらく", romaji: "hataraku", meaning: "bekerja", level: "N5", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "日本の会社で働きたいです。", exampleId: "Saya ingin bekerja di perusahaan Jepang." },
+  { id: "v16", word: "大きい", reading: "おおきい", romaji: "ookii", meaning: "besar", level: "N5", partOfSpeech: "Kata Sifat -i", exampleJp: "富士山はとても大きいです。", exampleId: "Gunung Fuji sangat besar." },
+  { id: "v17", word: "小さい", reading: "ちいさい", romaji: "chiisai", meaning: "kecil", level: "N5", partOfSpeech: "Kata Sifat -i", exampleJp: "この鞄は小さくて軽いです。", exampleId: "Tas ini kecil dan ringan." },
+  { id: "v18", word: "新しい", reading: "あたらしい", romaji: "atarashii", meaning: "baru", level: "N5", partOfSpeech: "Kata Sifat -i", exampleJp: "新しい本を買いました。", exampleId: "Saya membeli buku baru." },
+  { id: "v19", word: "古い", reading: "ふるい", romaji: "furui", meaning: "lama / tua", level: "N5", partOfSpeech: "Kata Sifat -i", exampleJp: "京都には古いお寺が多いです。", exampleId: "Di Kyoto ada banyak kuil tua." },
+  { id: "v20", word: "高い", reading: "たかい", romaji: "takai", meaning: "tinggi / mahal", level: "N5", partOfSpeech: "Kata Sifat -i", exampleJp: "このレストランは高すぎます。", exampleId: "Restoran ini terlalu mahal." },
+  { id: "v21", word: "安い", reading: "やすい", romaji: "yasui", meaning: "murah", level: "N5", partOfSpeech: "Kata Sifat -i", exampleJp: "この服は安くて質が良いです。", exampleId: "Pakaian ini murah dan kualitasnya bagus." },
+  { id: "v22", word: "学校", reading: "がっこう", romaji: "gakkou", meaning: "sekolah", level: "N5", partOfSpeech: "Kata Benda", exampleJp: "学校まで歩いて行きます。", exampleId: "Saya berjalan kaki ke sekolah." },
+  { id: "v23", word: "先生", reading: "せんせい", romaji: "sensei", meaning: "guru / dokter", level: "N5", partOfSpeech: "Kata Benda", exampleJp: "先生に質問をしました。", exampleId: "Saya bertanya kepada guru." },
+  { id: "v24", word: "時間", reading: "じかん", romaji: "jikan", meaning: "waktu / jam", level: "N5", partOfSpeech: "Kata Benda", exampleJp: "今は時間がありません。", exampleId: "Sekarang saya tidak punya waktu." },
+  { id: "v25", word: "友達", reading: "ともだち", romaji: "tomodachi", meaning: "teman", level: "N5", partOfSpeech: "Kata Benda", exampleJp: "友達と映画を見ました。", exampleId: "Saya menonton film bersama teman." },
+
+  // ==========================================
+  // JLPT N4 (Dasar Atas & Perjalanan)
+  // ==========================================
+  { id: "v26", word: "経験", reading: "けいけん", romaji: "keiken", meaning: "pengalaman", level: "N4", partOfSpeech: "Kata Benda / Suru", exampleJp: "日本での留学は良い経験です。", exampleId: "Kuliah di Jepang adalah pengalaman berharga." },
+  { id: "v27", word: "生活", reading: "せいかつ", romaji: "seikatsu", meaning: "kehidupan sehari-hari", level: "N4", partOfSpeech: "Kata Benda / Suru", exampleJp: "東京の生活に慣れました。", exampleId: "Saya sudah terbiasa dengan kehidupan di Tokyo." },
+  { id: "v28", word: "準備", reading: "じゅんび", romaji: "junbi", meaning: "persiapan", level: "N4", partOfSpeech: "Kata Benda / Suru", exampleJp: "旅行の準備をします。", exampleId: "Saya mempersiapkan untuk perjalanan." },
+  { id: "v29", word: "集める", reading: "あつめる", romaji: "atsumeru", meaning: "mengumpulkan", level: "N4", partOfSpeech: "Kata Kerja (Ichidan)", exampleJp: "好きなアニメグッズを集める。", exampleId: "Mengumpulkan merchandise anime favorit." },
+  { id: "v30", word: "残る", reading: "のこる", romaji: "nokoru", meaning: "tersisa / tertinggal", level: "N4", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "まだ時間が少し残っています。", exampleId: "Masih tersisa sedikit waktu." },
+  { id: "v31", word: "始める", reading: "はじめる", romaji: "hajimeru", meaning: "memulai", level: "N4", partOfSpeech: "Kata Kerja (Ichidan)", exampleJp: "今日から運動を始めます。", exampleId: "Mulai hari ini saya berolahraga." },
+  { id: "v32", word: "終わる", reading: "おわる", romaji: "owaru", meaning: "selesai / berakhir", level: "N4", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "授業がもうすぐ終わります。", exampleId: "Pelajaran sebentar lagi akan selesai." },
+  { id: "v33", word: "考える", reading: "かんがえる", romaji: "kangaeru", meaning: "memikirkan / merenungkan", level: "N4", partOfSpeech: "Kata Kerja (Ichidan)", exampleJp: "将来の計画を考えています。", exampleId: "Saya sedang memikirkan rencana masa depan." },
+  { id: "v34", word: "探す", reading: "さがす", romaji: "sagasu", meaning: "mencari", level: "N4", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "失くした鍵を探しています。", exampleId: "Saya sedang mencari kunci yang hilang." },
+  { id: "v35", word: "運ぶ", reading: "はこぶ", romaji: "hakobu", meaning: "mengangkut / membawa", level: "N4", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "重い荷物を一緒に運びましょう。", exampleId: "Ayo bawa barang berat ini bersama-sama." },
+  { id: "v36", word: "直す", reading: "なおす", romaji: "naosu", meaning: "memperbaiki", level: "N4", partOfSpeech: "Kata Kerja (Godan)", exampleJp: "壊れたパソコンを直しました。", exampleId: "Saya memperbaiki laptop yang rusak." },
+  { id: "v37", word: "伝える", reading: "つたえる", romaji: "tsutaeru", meaning: "menyampaikan (pesan)", level: "N4", partOfSpeech: "Kata Kerja (Ichidan)", exampleJp: "彼にメッセージを伝えてください。", exampleId: "Tolong sampaikan pesan ini kepadanya." },
+  { id: "v38", word: "忘れる", reading: "わすれる", romaji: "wasureru", meaning: "lupa", level: "N4", partOfSpeech: "Kata Kerja (Ichidan)", exampleJp: "傘を電車に忘れました。", exampleId: "Saya lupa payung saya di kereta." },
+  { id: "v39", word: "案内", reading: "あんない", romaji: "annai", meaning: "memandu / petunjuk", level: "N4", partOfSpeech: "Kata Benda / Suru", exampleJp: "京都の街を案内します。", exampleId: "Saya akan memandu Anda keliling kota Kyoto." },
+  { id: "v40", word: "約束", reading: "やくそく", romaji: "yakusoku", meaning: "janji", level: "N4", partOfSpeech: "Kata Benda / Suru", exampleJp: "友達と会う約束があります。", exampleId: "Saya ada janji bertemu dengan teman." },
+  { id: "v41", word: "予定", reading: "よてい", romaji: "yotei", meaning: "jadwal / rencana", level: "N4", partOfSpeech: "Kata Benda / Suru", exampleJp: "明日の予定を確認しましょう。", exampleId: "Mari pastikan jadwal untuk besok." },
+  { id: "v42", word: "相談", reading: "そうだん", romaji: "soudan", meaning: "berdiskusi / konsultasi", level: "N4", partOfSpeech: "Kata Benda / Suru", exampleJp: "先生に進路を相談しました。", exampleId: "Saya berkonsultasi tentang studi lanjut kepada guru." },
+  { id: "v43", word: "故障", reading: "こしょう", romaji: "koshou", meaning: "kerusakan mesin/alat", level: "N4", partOfSpeech: "Kata Benda / Suru", exampleJp: "エレベーターが故障しています。", exampleId: "Liftnya sedang rusak." },
+  { id: "v44", word: "親切", reading: "しんせつ", romaji: "shinsetsu", meaning: "ramah / baik hati", level: "N4", partOfSpeech: "Kata Sifat -na", exampleJp: "店員さんがとても親切でした。", exampleId: "Pelayan tokonya sangat ramah." },
+  { id: "v45", word: "危険", reading: "きけん", romaji: "kiken", meaning: "berbahaya", level: "N4", partOfSpeech: "Kata Sifat -na", exampleJp: "夜道は危険ですから気をつけて。", exampleId: "Jalan malam itu berbahaya, jadi berhati-hatilah." },
+
+  // ==========================================
+  // JLPT N3 (Menengah & Kehidupan Sosial)
+  // ==========================================
+  { id: "v46", word: "影響", reading: "えいきょう", romaji: "eikyou", meaning: "pengaruh / dampak", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "天候の影響で電車が遅れた。", exampleId: "Kereta terlambat karena pengaruh cuaca buruk." },
+  { id: "v47", word: "判断", reading: "はんだん", romaji: "handan", meaning: "penilaian / pertimbangan", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "冷静に状況を判断する。", exampleId: "Menilai situasi dengan kepala dingin." },
+  { id: "v48", word: "環境", reading: "かんきょう", romaji: "kankyou", meaning: "lingkungan", level: "N3", partOfSpeech: "Kata Benda", exampleJp: "自然環境を守ることが大切だ。", exampleId: "Penting untuk menjaga lingkungan alam." },
+  { id: "v49", word: "解決", reading: "かいけつ", romaji: "kaiketsu", meaning: "penyelesaian / solusi", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "問題がようやく解決しました。", exampleId: "Masalah akhirnya telah terselesaikan." },
+  { id: "v50", word: "参加", reading: "さんか", romaji: "sanka", meaning: "berpartisipasi / ikut serta", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "日本語の勉強会に参加します。", exampleId: "Saya berpartisipasi dalam kelompok belajar bahasa Jepang." },
+  { id: "v51", word: "協力", reading: "きょうりょく", romaji: "kyouryoku", meaning: "kerja sama", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "皆で協力して仕事を終わらせた。", exampleId: "Semua bekerja sama untuk menyelesaikan pekerjaan." },
+  { id: "v52", word: "努力", reading: "どりょく", romaji: "doryoku", meaning: "usaha keras / perjuangan", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "努力すれば必ず成果が出ます。", exampleId: "Jika berusaha keras, pasti hasilnya akan terlihat." },
+  { id: "v53", word: "成功", reading: "せいこう", romaji: "seikou", meaning: "kesuksesan / keberhasilan", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "プロジェクトが無事に成功した。", exampleId: "Proyeknya berhasil sukses dengan lancar." },
+  { id: "v54", word: "失敗", reading: "しっぱい", romaji: "shippai", meaning: "kegagalan", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "失敗を恐れずに挑戦しましょう。", exampleId: "Mari mencoba tanpa takut gagal." },
+  { id: "v55", word: "表現", reading: "ひょうげん", romaji: "hyougen", meaning: "ungkapan / ekspresi", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "日本語の多様な表現を学ぶ。", exampleId: "Mempelajari ragam ungkapan bahasa Jepang." },
+  { id: "v56", word: "調査", reading: "ちょうさ", romaji: "chousa", meaning: "survei / investigasi", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "市場の動向を調査しています。", exampleId: "Sedang melakukan survei tren pasar." },
+  { id: "v57", word: "発表", reading: "はっぴょう", romaji: "happyou", meaning: "presentasi / pengumuman", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "明日クラスで研究を発表します。", exampleId: "Besok saya presentasi penelitian di kelas." },
+  { id: "v58", word: "理由", reading: "りゆう", romaji: "riyuu", meaning: "alasan", level: "N3", partOfSpeech: "Kata Benda", exampleJp: "遅刻した理由を説明してください。", exampleId: "Tolong jelaskan alasan mengapa Anda terlambat." },
+  { id: "v59", word: "目的", reading: "もくてき", romaji: "mokuteki", meaning: "tujuan", level: "N3", partOfSpeech: "Kata Benda", exampleJp: "日本へ行く目的は何ですか？", exampleId: "Apa tujuan Anda pergi ke Jepang?" },
+  { id: "v60", word: "制度", reading: "せいど", romaji: "seido", meaning: "sistem / tata aturan", level: "N3", partOfSpeech: "Kata Benda", exampleJp: "新しい年金制度が導入された。", exampleId: "Sistem pensiun yang baru telah diperkenalkan." },
+  { id: "v61", word: "具体的", reading: "ぐたいてき", romaji: "gutaiteki", meaning: "konkret / jelas nyata", level: "N3", partOfSpeech: "Kata Sifat -na", exampleJp: "もっと具体的な例を挙げてください。", exampleId: "Tolong berikan contoh yang lebih konkret." },
+  { id: "v62", word: "積極的", reading: "せっきょくてき", romaji: "sekkyokuteki", meaning: "proaktif / positif", level: "N3", partOfSpeech: "Kata Sifat -na", exampleJp: "授業で積極的に発言します。", exampleId: "Saya berpendapat secara proaktif di kelas." },
+  { id: "v63", word: "満足", reading: "まんぞく", romaji: "manzoku", meaning: "puas / merasa cukup", level: "N3", partOfSpeech: "Kata Benda / Suru", exampleJp: "試験の結果にとても満足しています。", exampleId: "Saya sangat puas dengan hasil ujian." },
+
+  // ==========================================
+  // JLPT N2 (Menengah Atas & Bisnis)
+  // ==========================================
+  { id: "v64", word: "検討", reading: "けんとう", romaji: "kentou", meaning: "pertimbangan / pengkajian", level: "N2", partOfSpeech: "Kata Benda / Suru", exampleJp: "提案について前向きに検討します。", exampleId: "Kami akan mempertimbangkan proposal ini secara positif." },
+  { id: "v65", word: "克服", reading: "こくふく", romaji: "kokufuku", meaning: "penaklukan / mengatasi kesulitan", level: "N2", partOfSpeech: "Kata Benda / Suru", exampleJp: "困難を克服してゴールに達した。", exampleId: "Mengatasi kesulitan hingga mencapai tujuan." },
+  { id: "v66", word: "貢献", reading: "こうけん", romaji: "kouken", meaning: "kontribusi / sumbangsih", level: "N2", partOfSpeech: "Kata Benda / Suru", exampleJp: "地域社会の発展に貢献する。", exampleId: "Berkontribusi pada perkembangan masyarakat setempat." },
+  { id: "v67", word: "普及", reading: "ふきゅう", romaji: "fukyuu", meaning: "penyebaran luas / kepopuleran", level: "N2", partOfSpeech: "Kata Benda / Suru", exampleJp: "スマートフォンの普及が進んでいる。", exampleId: "Penyebaran ponsel pintar semakin meluas." },
+  { id: "v68", word: "維持", reading: "いじ", romaji: "iji", meaning: "pemeliharaan / mempertahankan", level: "N2", partOfSpeech: "Kata Benda / Suru", exampleJp: "健康な体を維持するために走る。", exampleId: "Berlari untuk mempertahankan tubuh yang sehat." },
+  { id: "v69", word: "改善", reading: "かいぜん", romaji: "kaizen", meaning: "perbaikan berkelanjutan", level: "N2", partOfSpeech: "Kata Benda / Suru", exampleJp: "業務の効率を改善しました。", exampleId: "Telah memperbaiki efisiensi kerja." },
+  { id: "v70", word: "傾向", reading: "けいこう", romaji: "keikou", meaning: "tren / kecenderungan", level: "N2", partOfSpeech: "Kata Benda", exampleJp: "若者の消費傾向が変化している。", exampleId: "Tren konsumsi anak muda sedang berubah." },
+  { id: "v71", word: "実施", reading: "じっし", romaji: "jisshi", meaning: "pelaksanaan / penerapan", level: "N2", partOfSpeech: "Kata Benda / Suru", exampleJp: "来月から新しい規則を実施する。", exampleId: "Bulan depan akan menerapkan peraturan baru." },
+  { id: "v72", word: "把握", reading: "はあく", romaji: "haaku", meaning: "pemahaman mendalam", level: "N2", partOfSpeech: "Kata Benda / Suru", exampleJp: "現状を正確に把握することが重要だ。", exampleId: "Penting untuk memahami kondisi saat ini secara tepat." },
+  { id: "v73", word: "促進", reading: "そくしん", romaji: "sokushin", meaning: "dorongan / akselerasi", level: "N2", partOfSpeech: "Kata Benda / Suru", exampleJp: "経済の成長を促進する政策。", exampleId: "Kebijakan untuk mendorong pertumbuhan ekonomi." },
+  { id: "v74", word: "適切", reading: "てきせつ", romaji: "tekisetsu", meaning: "tepat / sesuai pada tempatnya", level: "N2", partOfSpeech: "Kata Sifat -na", exampleJp: "状況に応じて適切な判断を下す。", exampleId: "Mengambil keputusan yang tepat sesuai situasi." },
+  { id: "v75", word: "深刻", reading: "しんこく", romaji: "shinkoku", meaning: "genting / serius (masalah)", level: "N2", partOfSpeech: "Kata Sifat -na", exampleJp: "少子化は深刻な社会問題です。", exampleId: "Penurunan angka kelahiran adalah masalah sosial yang serius." },
+  { id: "v76", word: "豊富", reading: "ほうふ", romaji: "houfu", meaning: "berlimpah / kaya akan variasi", level: "N2", partOfSpeech: "Kata Sifat -na", exampleJp: "日本は温泉の資源が豊富です。", exampleId: "Jepang kaya akan sumber air panas." },
+  { id: "v77", word: "迅速", reading: "じんそく", romaji: "jinsoku", meaning: "cepat tanggap / sigap", level: "N2", partOfSpeech: "Kata Sifat -na", exampleJp: "トラブルに迅速に対応してください。", exampleId: "Tolong tanggapi masalah ini dengan sigap." },
+  { id: "v78", word: "慎重", reading: "しんちょう", romaji: "shinchou", meaning: "berhati-hati / penuh kehati-hatian", level: "N2", partOfSpeech: "Kata Sifat -na", exampleJp: "契約書の内容を慎重に確認する。", exampleId: "Memeriksa isi kontrak dengan penuh kehati-hatian." },
+
+  // ==========================================
+  // JLPT N1 (Tingkat Mahir & Bahasa Resmi)
+  // ==========================================
+  { id: "v79", word: "遺憾", reading: "いかん", romaji: "ikan", meaning: "rasa penyesalan mendalam", level: "N1", partOfSpeech: "Kata Sifat -na / Benda", exampleJp: "今回の事態は誠に遺憾に存じます。", exampleId: "Kami merasa sangat menyesal atas terjadinya insiden ini." },
+  { id: "v80", word: "容赦", reading: "ようしゃ", romaji: "yousha", meaning: "pengampunan / toleransi", level: "N1", partOfSpeech: "Kata Benda / Suru", exampleJp: "何卒ご容赦いただけますようお願い申し上げます。", exampleId: "Kami memohon dengan sangat agar Anda berkenan memaafkan hal ini." },
+  { id: "v81", word: "尽力", reading: "じんりょく", romaji: "jinryoku", meaning: "pengerahan segenap daya upaya", level: "N1", partOfSpeech: "Kata Benda / Suru", exampleJp: "問題解決に向けて全力を尽力いたします。", exampleId: "Kami akan mengerahkan segenap tenaga untuk menyelesaikan masalah ini." },
+  { id: "v82", word: "忌憚", reading: "きたん", romaji: "kitan", meaning: "rasa sungkan / segan", level: "N1", partOfSpeech: "Kata Benda", exampleJp: "忌憚のないご意見をお聞かせください。", exampleId: "Mohon sampaikan pendapat Anda yang jujur tanpa rasa sungkan." },
+  { id: "v83", word: "矛盾", reading: "むじゅん", romaji: "mujun", meaning: "kontradiksi / pertentangan", level: "N1", partOfSpeech: "Kata Benda / Suru", exampleJp: "彼の発言には明らかな矛盾がある。", exampleId: "Ada kontradiksi yang sangat jelas pada pernyataannya." },
+  { id: "v84", word: "謙虚", reading: "けんきょ", romaji: "kenkyo", meaning: "kerendahan hati", level: "N1", partOfSpeech: "Kata Sifat -na", exampleJp: "常に謙虚な姿勢で学び続ける。", exampleId: "Senantiasa terus belajar dengan sikap rendah hati." },
+  { id: "v85", word: "妥協", reading: "だきょう", romaji: "dakyou", meaning: "kompromi / kesepakatan bersama", level: "N1", partOfSpeech: "Kata Benda / Suru", exampleJp: "両者が歩み寄って妥協点を見出した。", exampleId: "Kedua belah pihak saling mendekat dan menemukan titik temu kompromi." },
+  { id: "v86", word: "模索", reading: "もさく", romaji: "mosaku", meaning: "pencarian jalan keluar", level: "N1", partOfSpeech: "Kata Benda / Suru", exampleJp: "暗中模索の末に解決策を見つけた。", exampleId: "Setelah meraba-raba mencari jalan keluar, akhirnya solusi ditemukan." },
+  { id: "v87", word: "徹底", reading: "てってい", romaji: "tettei", meaning: "penuntasan menyeluruh hingga tuntas", level: "N1", partOfSpeech: "Kata Benda / Suru", exampleJp: "安全管理を徹底してください。", exampleId: "Tolong terapkan manajemen keselamatan secara menyeluruh." },
+  { id: "v88", word: "卓越", reading: "たくえつ", romaji: "takuetsu", meaning: "keunggulan luar biasa", level: "N1", partOfSpeech: "Kata Benda / Suru", exampleJp: "卓越した技術で世界を驚かせた。", exampleId: "Mengejutkan dunia dengan teknologi yang luar biasa unggul." },
+  { id: "v89", word: "顕著", reading: "けんちょ", romaji: "kencho", meaning: "nyata terlihat / mencolok", level: "N1", partOfSpeech: "Kata Sifat -na", exampleJp: "景気回復の兆候が顕著に現れた。", exampleId: "Tanda-tanda pemulihan ekonomi terlihat dengan sangat nyata." },
+  { id: "v90", word: "概ね", reading: "おおむね", romaji: "oomune", meaning: "pada garis besarnya / secara umum", level: "N1", partOfSpeech: "Kata Keterangan", exampleJp: "計画は概ね順調に進んでいます。", exampleId: "Rencana secara garis besar berjalan dengan lancar." },
 ];
 
 // ------------------------------------------
@@ -323,7 +407,7 @@ export default function DojoPage() {
     | "jlpt";
 
   const [activeTab, setActiveTab] = useState<DojoTab>("dashboard");
-  const [levelFilter, setLevelFilter] = useState<"all" | "N5" | "N4" | "N3">("all");
+  const [levelFilter, setLevelFilter] = useState<"all" | "N5" | "N4" | "N3" | "N2" | "N1">("all");
   const [audioSpeed, setAudioSpeed] = useState<number>(0.9);
 
   // Global stores
@@ -748,9 +832,9 @@ export default function DojoPage() {
         {/* Filter and Audio Row */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-white border border-[#E7E5E4]">
           {/* Level Filter */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-xs font-medium text-[#6B7280]">Level:</span>
-            {(["all", "N5", "N4", "N3"] as const).map(lvl => (
+            {(["all", "N5", "N4", "N3", "N2", "N1"] as const).map(lvl => (
               <button
                 key={lvl}
                 onClick={() => {
@@ -1123,8 +1207,8 @@ export default function DojoPage() {
                   { level: "JLPT N5 (Pemula)", desc: "100 Kanji, 800 Kosakata dasar, tata bahasa dasar.", status: "Sedang Berjalan", unlocked: true, tab: "chat" },
                   { level: "JLPT N4 (Dasar Atas)", desc: "300 Kanji, 1.500 Kosakata, percakapan sehari-hari.", status: "Tersedia", unlocked: true, tab: "chat" },
                   { level: "JLPT N3 (Menengah)", desc: "650 Kanji, 3.750 Kosakata, artikel & percakapan alami.", status: "Tersedia", unlocked: true, tab: "chat" },
-                  { level: "JLPT N2 (Menengah Atas)", desc: "1.000 Kanji, 6.000 Kosakata, bacaan formal.", status: "Segera Hadir", unlocked: false, tab: "jlpt" },
-                  { level: "JLPT N1 (Mahir)", desc: "2.000+ Kanji, 10.000 Kosakata, literatur & profesional.", status: "Segera Hadir", unlocked: false, tab: "jlpt" },
+                  { level: "JLPT N2 (Menengah Atas)", desc: "1.000 Kanji, 6.000 Kosakata, bacaan formal & bisnis.", status: "Tersedia", unlocked: true, tab: "chat" },
+                  { level: "JLPT N1 (Mahir)", desc: "2.000+ Kanji, 10.000 Kosakata, literatur & bahasa resmi.", status: "Tersedia", unlocked: true, tab: "chat" },
                 ].map((p, idx) => (
                   <div
                     key={idx}
@@ -1824,16 +1908,18 @@ export default function DojoPage() {
             className="space-y-4"
           >
             <div className="bg-white rounded-2xl border border-[#E7E5E4] p-5 shadow-2xs">
-              <h3 className="text-base font-bold text-[#1F2937] mb-1">Simulasi Ujian JLPT (N5 - N3)</h3>
+              <h3 className="text-base font-bold text-[#1F2937] mb-1">Simulasi Ujian JLPT (N5 - N1)</h3>
               <p className="text-xs text-[#6B7280] mb-4">
                 Uji kemampuan menyeluruh mencakup Kosakata (Goi), Kanji (Moji), dan Tata Bahasa (Bunpou).
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
                 {[
                   { level: "JLPT N5", time: "25 Menit", questions: 20, status: "Tersedia" },
                   { level: "JLPT N4", time: "30 Menit", questions: 25, status: "Tersedia" },
                   { level: "JLPT N3", time: "35 Menit", questions: 30, status: "Tersedia" },
+                  { level: "JLPT N2", time: "40 Menit", questions: 35, status: "Tersedia" },
+                  { level: "JLPT N1", time: "45 Menit", questions: 40, status: "Tersedia" },
                 ].map((sim, i) => (
                   <div key={i} className="p-4 rounded-xl bg-white border border-[#E7E5E4] flex flex-col justify-between shadow-2xs">
                     <div>
