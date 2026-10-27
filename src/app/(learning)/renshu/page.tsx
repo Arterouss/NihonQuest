@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, BookOpen, Brain, Target, Trophy, Flame,
   Volume2, Check, X, RotateCcw, ChevronRight,
   ChevronLeft, Search, Bookmark, BookmarkCheck, Play,
   CheckCircle2, AlertCircle, Layers, ArrowRight,
-  Calendar, Zap, AlignJustify, FileText, Sliders
+  Calendar, Zap, AlignJustify, FileText, Sliders,
+  MessageCircle, Send, RefreshCw, User, Bot, HelpCircle
 } from "lucide-react";
 import { useProgressStore } from "@/store/useProgressStore";
 import { useAchievementStore } from "@/store/useAchievementStore";
@@ -72,6 +73,19 @@ export interface SRSItem {
   repetitions: number;
   nextReviewDate: string;
   status: "new" | "learning" | "review" | "mastered";
+}
+
+// Interactive Chat Message Type
+export interface ChatMessage {
+  id: string;
+  sender: "sensei" | "user";
+  type: "text" | "question" | "feedback";
+  text?: string;
+  word?: DojoVocab;
+  isCorrect?: boolean;
+  explanation?: string;
+  options?: string[];
+  timestamp?: string;
 }
 
 // ------------------------------------------
@@ -296,6 +310,7 @@ function calculateSM2(
 export default function DojoPage() {
   type DojoTab =
     | "dashboard"
+    | "chat" // Interactive Renshuu Chat Flow
     | "paths"
     | "kana"
     | "vocab"
@@ -320,7 +335,187 @@ export default function DojoPage() {
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Initial Load
+  // ==========================================
+  // CHAT DOJO INTERACTIVE STATE
+  // ==========================================
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatIndex, setChatIndex] = useState(0);
+  const [isSenseiTyping, setIsSenseiTyping] = useState(false);
+  const [chatSelectedOption, setChatSelectedOption] = useState<string | null>(null);
+  const [chatLastAnswerWrong, setChatLastAnswerWrong] = useState(false);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  // Filtered vocabulary for chat and vocab tab
+  const filteredVocab = useMemo(() => {
+    if (levelFilter === "all") return masterVocab;
+    return masterVocab.filter(v => v.level === levelFilter);
+  }, [levelFilter]);
+
+  const currentChatWord = filteredVocab[chatIndex % filteredVocab.length];
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, isSenseiTyping]);
+
+  // Generate 4 randomized options for current chat word
+  const currentChatOptions = useMemo(() => {
+    if (!currentChatWord) return [];
+    const pool = masterVocab.filter(v => v.id !== currentChatWord.id).map(v => v.meaning);
+    const shuffledPool = [...pool].sort(() => 0.5 - Math.random()).slice(0, 3);
+    return [...shuffledPool, currentChatWord.meaning].sort(() => 0.5 - Math.random());
+  }, [currentChatWord]);
+
+  // Initialize Chat conversation
+  const initChat = useCallback(() => {
+    if (!currentChatWord) return;
+    const initialMsgs: ChatMessage[] = [
+      {
+        id: "msg-welcome",
+        sender: "sensei",
+        type: "text",
+        text: "Konnichiwa! Selamat datang di sesi latihan interaktif Dojo Chat! 🥋 Coba tebak kata-kata berikut ya.",
+        timestamp: "Baru saja",
+      },
+      {
+        id: "msg-q-0",
+        sender: "sensei",
+        type: "question",
+        text: "Coba tebak, apa arti dari kata berikut ini?",
+        word: currentChatWord,
+        options: currentChatOptions,
+        timestamp: "Baru saja",
+      },
+    ];
+    setChatMessages(initialMsgs);
+    setChatSelectedOption(null);
+    setChatLastAnswerWrong(false);
+  }, [currentChatWord, currentChatOptions]);
+
+  // Trigger init on first load or tab switch
+  useEffect(() => {
+    if (activeTab === "chat" && chatMessages.length === 0) {
+      initChat();
+    }
+  }, [activeTab, chatMessages.length, initChat]);
+
+  // Handle User Chat Answer
+  const handleChatAnswer = (option: string) => {
+    if (chatSelectedOption !== null || !currentChatWord) return;
+    setChatSelectedOption(option);
+
+    // 1. User message bubble
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      sender: "user",
+      type: "text",
+      text: option,
+      timestamp: "Baru saja",
+    };
+    setChatMessages(prev => [...prev, userMsg]);
+    setIsSenseiTyping(true);
+
+    const isCorrect = option === currentChatWord.meaning;
+
+    // 2. Sensei responses after typing delay
+    setTimeout(() => {
+      setIsSenseiTyping(false);
+
+      if (isCorrect) {
+        setChatLastAnswerWrong(false);
+        // Play audio of the word
+        speakJa(currentChatWord.word, audioSpeed);
+        // Add XP and unlock achievement
+        addXP(10, "Dojo Chat");
+        unlockAchievement("vocab-100");
+
+        const feedbackMsg: ChatMessage = {
+          id: `feedback-${Date.now()}`,
+          sender: "sensei",
+          type: "feedback",
+          isCorrect: true,
+          text: "✅ Benar sekali! 素晴らしい！ (+10 XP)",
+          explanation: `${currentChatWord.word} (${currentChatWord.reading}) artinya "${currentChatWord.meaning}".\nContoh: ${currentChatWord.exampleJp} (${currentChatWord.exampleId})`,
+          timestamp: "Baru saja",
+        };
+        setChatMessages(prev => [...prev, feedbackMsg]);
+
+        // Auto advance to next question after 1.5 seconds!
+        setTimeout(() => {
+          setIsSenseiTyping(true);
+          setTimeout(() => {
+            setIsSenseiTyping(false);
+            const nextIdx = (chatIndex + 1) % filteredVocab.length;
+            setChatIndex(nextIdx);
+            const nextWord = filteredVocab[nextIdx];
+
+            // Next options
+            const pool = masterVocab.filter(v => v.id !== nextWord.id).map(v => v.meaning);
+            const nextOptions = [...pool.sort(() => 0.5 - Math.random()).slice(0, 3), nextWord.meaning].sort(() => 0.5 - Math.random());
+
+            const nextQMsg: ChatMessage = {
+              id: `msg-q-${nextIdx}-${Date.now()}`,
+              sender: "sensei",
+              type: "question",
+              text: "Hebat! Lanjut ke kata materi berikutnya:",
+              word: nextWord,
+              options: nextOptions,
+              timestamp: "Baru saja",
+            };
+            setChatMessages(prev => [...prev, nextQMsg]);
+            setChatSelectedOption(null);
+          }, 700);
+        }, 1200);
+
+      } else {
+        // WRONG ANSWER
+        setChatLastAnswerWrong(true);
+        const feedbackMsg: ChatMessage = {
+          id: `feedback-${Date.now()}`,
+          sender: "sensei",
+          type: "feedback",
+          isCorrect: false,
+          text: "❌ Kurang tepat! Jangan menyerah ya.",
+          explanation: `Jawaban yang benar adalah "${currentChatWord.meaning}".\n${currentChatWord.word} (${currentChatWord.reading}) = ${currentChatWord.meaning}.\nContoh: ${currentChatWord.exampleJp} (${currentChatWord.exampleId})`,
+          timestamp: "Baru saja",
+        };
+        setChatMessages(prev => [...prev, feedbackMsg]);
+      }
+    }, 700);
+  };
+
+  // Skip or advance after wrong answer
+  const advanceChatNext = () => {
+    setIsSenseiTyping(true);
+    setChatLastAnswerWrong(false);
+    setTimeout(() => {
+      setIsSenseiTyping(false);
+      const nextIdx = (chatIndex + 1) % filteredVocab.length;
+      setChatIndex(nextIdx);
+      const nextWord = filteredVocab[nextIdx];
+      const pool = masterVocab.filter(v => v.id !== nextWord.id).map(v => v.meaning);
+      const nextOptions = [...pool.sort(() => 0.5 - Math.random()).slice(0, 3), nextWord.meaning].sort(() => 0.5 - Math.random());
+
+      const nextQMsg: ChatMessage = {
+        id: `msg-q-${nextIdx}-${Date.now()}`,
+        sender: "sensei",
+        type: "question",
+        text: "Tidak apa-apa, mari coba kata yang ini:",
+        word: nextWord,
+        options: nextOptions,
+        timestamp: "Baru saja",
+      };
+      setChatMessages(prev => [...prev, nextQMsg]);
+      setChatSelectedOption(null);
+    }, 500);
+  };
+
+  const retryCurrentChatWord = () => {
+    setChatSelectedOption(null);
+    setChatLastAnswerWrong(false);
+  };
+
+  // Initial Load & SRS Setup
   useEffect(() => {
     const savedSrs = localStorage.getItem("dojo_srs_items");
     if (savedSrs) {
@@ -374,11 +569,6 @@ export default function DojoPage() {
   const [vocabIndex, setVocabIndex] = useState(0);
   const [vocabMode, setVocabMode] = useState<"learn" | "quiz_jp_id" | "quiz_audio">("learn");
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-
-  const filteredVocab = useMemo(() => {
-    if (levelFilter === "all") return masterVocab;
-    return masterVocab.filter(v => v.level === levelFilter);
-  }, [levelFilter]);
 
   const currentVocab = filteredVocab[vocabIndex % filteredVocab.length];
 
@@ -503,6 +693,7 @@ export default function DojoPage() {
 
   const tabs: { id: DojoTab; label: string; icon: React.ReactNode }[] = [
     { id: "dashboard", label: "Dashboard", icon: <Calendar size={15} /> },
+    { id: "chat", label: "💬 Chat Dojo", icon: <MessageCircle size={15} /> },
     { id: "paths", label: "Jalur Belajar", icon: <Layers size={15} /> },
     { id: "kana", label: "Kana Hub", icon: <span className="font-jp font-bold text-xs">あ</span> },
     { id: "vocab", label: "Kosakata", icon: <BookOpen size={15} /> },
@@ -533,7 +724,7 @@ export default function DojoPage() {
                   Renshuu Hub
                 </span>
               </div>
-              <p className="text-[#6B7280] text-sm">修練 (Shuren) — Pusat latihan terpadu kosakata, kanji, tata bahasa, dan SRS</p>
+              <p className="text-[#6B7280] text-sm">修練 (Shuren) — Pusat latihan interaktif kosakata, kanji, tata bahasa, dan SRS</p>
             </div>
           </div>
 
@@ -562,7 +753,11 @@ export default function DojoPage() {
             {(["all", "N5", "N4", "N3"] as const).map(lvl => (
               <button
                 key={lvl}
-                onClick={() => setLevelFilter(lvl)}
+                onClick={() => {
+                  setLevelFilter(lvl);
+                  setChatIndex(0);
+                  setChatMessages([]);
+                }}
                 className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
                   levelFilter === lvl
                     ? "bg-[#D95F76] text-white shadow-2xs"
@@ -671,21 +866,21 @@ export default function DojoPage() {
               <div className="bg-white rounded-2xl border border-[#E7E5E4] p-5 shadow-2xs flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#22C55E] bg-[#DCFCE7] px-2.5 py-0.5 rounded-full">
-                      Lanjut Belajar
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#D95F76] bg-[#FCE7EC] px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <Sparkles size={11} /> Mode Renshuu
                     </span>
-                    <Play size={16} className="text-[#6B7280]" />
+                    <MessageCircle size={16} className="text-[#6B7280]" />
                   </div>
-                  <h3 className="text-lg font-bold text-[#1F2937] mt-1">Kosakata N5 Inti</h3>
+                  <h3 className="text-lg font-bold text-[#1F2937] mt-1">Chat Latihan Sensei</h3>
                   <p className="text-xs text-[#6B7280] mt-1">
-                    Latihan kata kerja dan kata sifat dasar yang sering muncul di JLPT.
+                    Latihan tebak kosakata gaya chat interaktif dengan Sensei otomatis.
                   </p>
                 </div>
                 <button
-                  onClick={() => setActiveTab("vocab")}
-                  className="mt-4 w-full py-2 px-3 rounded-xl bg-[#D95F76] hover:bg-[#c44f65] text-white text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+                  onClick={() => setActiveTab("chat")}
+                  className="mt-4 w-full py-2 px-3 rounded-xl bg-[#D95F76] hover:bg-[#c44f65] text-white text-xs font-semibold transition-all flex items-center justify-center gap-1.5 shadow-2xs"
                 >
-                  Buka Kosakata <ArrowRight size={13} />
+                  Mulai Chat Dojo <ArrowRight size={13} />
                 </button>
               </div>
             </div>
@@ -723,6 +918,190 @@ export default function DojoPage() {
           </motion.div>
         )}
 
+        {/* TAB: CHAT DOJO INTERAKTIF (FITUR SEPERTI RENSHUU APP) */}
+        {activeTab === "chat" && (
+          <motion.div
+            key="tab-chat"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="max-w-2xl mx-auto"
+          >
+            <div className="bg-white rounded-2xl border border-[#E7E5E4] shadow-xs overflow-hidden flex flex-col">
+              {/* Chat Header */}
+              <div className="px-5 py-3.5 bg-white border-b border-[#E7E5E4] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-2xl bg-[#D95F76] text-white flex items-center justify-center font-bold text-sm shadow-2xs">
+                      🥋
+                    </div>
+                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#22C55E] border-2 border-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-[#1F2937]">Sensei Dojo (修練先生)</h3>
+                    <p className="text-[11px] text-[#22C55E] font-medium flex items-center gap-1">
+                      <span>●</span> Online &bull; Siap Latihan Interaktif
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FCE7EC] text-[#D95F76] font-semibold">
+                    {levelFilter === "all" ? "Semua Level" : levelFilter}
+                  </span>
+                  <button
+                    onClick={() => {
+                      setChatIndex(0);
+                      initChat();
+                    }}
+                    title="Ulangi dari awal"
+                    className="p-1.5 rounded-lg border border-[#E7E5E4] text-[#6B7280] hover:text-[#D95F76] hover:bg-[#FFF9F7] transition-all"
+                  >
+                    <RefreshCw size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Message Thread Area */}
+              <div className="p-4 sm:p-5 space-y-4 min-h-[380px] max-h-[480px] overflow-y-auto bg-[#F9FAFB]/70">
+                {chatMessages.map(msg => (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
+                  >
+                    {/* SENSEI BUBBLE */}
+                    {msg.sender === "sensei" && (
+                      <div className="max-w-[85%] sm:max-w-[78%]">
+                        <div className="flex items-end gap-2">
+                          <div className="w-7 h-7 rounded-full bg-[#D95F76] text-white flex items-center justify-center text-xs flex-shrink-0 shadow-2xs">
+                            🥋
+                          </div>
+                          <div className="bg-white border border-[#E7E5E4] p-3.5 rounded-2xl rounded-bl-xs shadow-2xs text-[#1F2937] text-xs space-y-2">
+                            {msg.text && <p className="font-medium text-xs text-[#374151]">{msg.text}</p>}
+
+                            {/* Question Card inside Chat */}
+                            {msg.type === "question" && msg.word && (
+                              <div className="mt-2 p-3.5 rounded-xl bg-[#FFF9F7] border border-[#FCE7EC] text-center">
+                                <div className="text-[11px] font-mono text-[#D95F76] font-semibold">
+                                  {msg.word.reading} ({msg.word.romaji})
+                                </div>
+                                <div className="text-3xl font-jp font-extrabold text-[#1F2937] my-1">
+                                  {msg.word.word}
+                                </div>
+                                <div className="flex items-center justify-center gap-1.5 mt-2">
+                                  <button
+                                    onClick={() => speakJa(msg.word!.word, audioSpeed)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-[#FCE7EC] text-[#D95F76] text-[11px] font-semibold hover:bg-[#FCE7EC] transition-all cursor-pointer"
+                                  >
+                                    <Volume2 size={13} /> Dengarkan
+                                  </button>
+                                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#DCFCE7] text-[#22C55E] font-bold">
+                                    {msg.word.level}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Feedback Result inside Chat */}
+                            {msg.type === "feedback" && (
+                              <div
+                                className={`p-3 rounded-xl border mt-1.5 ${
+                                  msg.isCorrect
+                                    ? "bg-[#DCFCE7]/70 border-[#22C55E]/50 text-[#15803D]"
+                                    : "bg-[#FEE2E2]/70 border-[#EF4444]/50 text-[#B91C1C]"
+                                }`}
+                              >
+                                <p className="font-bold text-xs">{msg.text}</p>
+                                {msg.explanation && (
+                                  <p className="text-[11px] mt-1 text-[#374151] whitespace-pre-line leading-relaxed">
+                                    {msg.explanation}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* USER BUBBLE */}
+                    {msg.sender === "user" && (
+                      <div className="max-w-[75%]">
+                        <div className="bg-[#D95F76] text-white px-4 py-2.5 rounded-2xl rounded-br-xs shadow-2xs text-xs font-semibold">
+                          {msg.text}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* SENSEI TYPING ANIMATION */}
+                {isSenseiTyping && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-[#D95F76] text-white flex items-center justify-center text-xs flex-shrink-0">
+                      🥋
+                    </div>
+                    <div className="bg-white border border-[#E7E5E4] px-4 py-3 rounded-2xl rounded-bl-xs shadow-2xs flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#D95F76] animate-bounce" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#D95F76] animate-bounce [animation-delay:0.2s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#D95F76] animate-bounce [animation-delay:0.4s]" />
+                      <span className="text-[10px] text-[#6B7280] ml-1 font-medium">Sensei sedang mengetik...</span>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={chatBottomRef} />
+              </div>
+
+              {/* Chat Input & Response Area */}
+              <div className="p-4 bg-white border-t border-[#E7E5E4]">
+                {chatLastAnswerWrong ? (
+                  /* If Wrong, provide Retry or Next */
+                  <div className="flex items-center justify-between gap-3">
+                    <button
+                      onClick={retryCurrentChatWord}
+                      className="flex-1 py-2.5 px-4 rounded-xl border border-[#E7E5E4] bg-white hover:bg-[#FFF9F7] text-xs font-semibold text-[#1F2937] transition-all flex items-center justify-center gap-1.5 shadow-2xs"
+                    >
+                      <RotateCcw size={14} className="text-[#6B7280]" /> Coba Tebak Lagi
+                    </button>
+                    <button
+                      onClick={advanceChatNext}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#D95F76] hover:bg-[#c44f65] text-white text-xs font-semibold transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                    >
+                      Lanjut ke Kata Berikutnya <ChevronRight size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  /* 4 Quick Reply Chips */
+                  <div>
+                    <div className="text-[11px] font-semibold text-[#6B7280] mb-2 flex items-center justify-between">
+                      <span>Pilih jawabanmu untuk Sensei:</span>
+                      <span className="text-[10px] text-[#9CA3AF]">Ketuk untuk mengirim</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {currentChatOptions.map((opt, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleChatAnswer(opt)}
+                          disabled={chatSelectedOption !== null || isSenseiTyping}
+                          className={`p-2.5 rounded-xl border text-xs font-medium text-left transition-all flex items-center justify-between ${
+                            chatSelectedOption === opt
+                              ? "bg-[#FCE7EC] border-[#D95F76] text-[#D95F76] font-bold"
+                              : "bg-white hover:bg-[#FFF9F7] border-[#E7E5E4] text-[#1F2937] hover:border-[#D95F76]"
+                          } disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs`}
+                        >
+                          <span className="truncate">{opt}</span>
+                          <span className="text-[10px] text-[#9CA3AF] ml-1">➔</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* TAB: JALUR BELAJAR */}
         {activeTab === "paths" && (
           <motion.div
@@ -741,9 +1120,9 @@ export default function DojoPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {[
                   { level: "Hiragana & Katakana", desc: "46 huruf dasar + variasi dakuten & yoon.", status: "Selesai", unlocked: true, tab: "kana" },
-                  { level: "JLPT N5 (Pemula)", desc: "100 Kanji, 800 Kosakata dasar, tata bahasa dasar.", status: "Sedang Berjalan", unlocked: true, tab: "vocab" },
-                  { level: "JLPT N4 (Dasar Atas)", desc: "300 Kanji, 1.500 Kosakata, percakapan sehari-hari.", status: "Tersedia", unlocked: true, tab: "vocab" },
-                  { level: "JLPT N3 (Menengah)", desc: "650 Kanji, 3.750 Kosakata, artikel & percakapan alami.", status: "Tersedia", unlocked: true, tab: "vocab" },
+                  { level: "JLPT N5 (Pemula)", desc: "100 Kanji, 800 Kosakata dasar, tata bahasa dasar.", status: "Sedang Berjalan", unlocked: true, tab: "chat" },
+                  { level: "JLPT N4 (Dasar Atas)", desc: "300 Kanji, 1.500 Kosakata, percakapan sehari-hari.", status: "Tersedia", unlocked: true, tab: "chat" },
+                  { level: "JLPT N3 (Menengah)", desc: "650 Kanji, 3.750 Kosakata, artikel & percakapan alami.", status: "Tersedia", unlocked: true, tab: "chat" },
                   { level: "JLPT N2 (Menengah Atas)", desc: "1.000 Kanji, 6.000 Kosakata, bacaan formal.", status: "Segera Hadir", unlocked: false, tab: "jlpt" },
                   { level: "JLPT N1 (Mahir)", desc: "2.000+ Kanji, 10.000 Kosakata, literatur & profesional.", status: "Segera Hadir", unlocked: false, tab: "jlpt" },
                 ].map((p, idx) => (
@@ -775,7 +1154,7 @@ export default function DojoPage() {
                         onClick={() => setActiveTab(p.tab as DojoTab)}
                         className="text-xs font-semibold text-[#D95F76] hover:underline flex items-center gap-1"
                       >
-                        Buka Materi <ChevronRight size={13} />
+                        Buka Latihan <ChevronRight size={13} />
                       </button>
                     )}
                   </div>
@@ -1297,10 +1676,10 @@ export default function DojoPage() {
                   Antrean Spaced Repetition (SM-2) Anda telah bersih. Kartu akan dijadwalkan ulang sesuai interval memori Anda.
                 </p>
                 <button
-                  onClick={() => setActiveTab("vocab")}
+                  onClick={() => setActiveTab("chat")}
                   className="px-5 py-2 rounded-xl bg-[#D95F76] text-white text-xs font-semibold shadow-2xs"
                 >
-                  Pelajari Kosakata Baru
+                  Mulai Latihan Chat Dojo
                 </button>
               </div>
             ) : (
@@ -1472,12 +1851,12 @@ export default function DojoPage() {
 
                     <button
                       onClick={() => {
-                        setActiveTab("vocab");
+                        setActiveTab("chat");
                         setLevelFilter(sim.level.split(" ")[1] as any);
                       }}
                       className="w-full py-2 rounded-xl bg-[#D95F76] hover:bg-[#c44f65] text-white text-xs font-semibold transition-all flex items-center justify-center gap-1 shadow-2xs"
                     >
-                      Mulai Simulasi <Play size={13} />
+                      Mulai Simulasi Chat <Play size={13} />
                     </button>
                   </div>
                 ))}
